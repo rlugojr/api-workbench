@@ -1,6 +1,6 @@
 # API Workbench
 
-[![Build Status](https://magnum.travis-ci.com/mulesoft-labs/api-workbench.svg?token=XfSb9dr27Tyro5c1ENBr&branch=master)](https://magnum.travis-ci.com/mulesoft-labs/api-workbench)
+[![Build Status](https://travis-ci.org/mulesoft/api-workbench.svg?branch=code)](https://travis-ci.org/mulesoft/api-workbench)
 
 ![API Workbench](https://dl.dropboxusercontent.com/u/497895/__permalinks/api-workbench-slide-small.png)
 
