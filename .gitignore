@@ -43,3 +43,5 @@ atom-package/
 
 .project
 .settings
+
+!gulpfile.js
