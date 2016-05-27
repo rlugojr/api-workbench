@@ -803,8 +803,15 @@ class MarkdownField extends PropertyEditorInfo{
 
 }
 class ExampleField extends PropertyEditorInfo{
+    constructor(public property:hl.IProperty,protected node:hl.IHighLevelNode,
+                private text : string, title?: string) {
+        super(property, node);
+        this.setDescription("")
+        if(title)this.setTitle(title);
+    }
+
     createField(){
-        var editor = new JSONField("",x=>{});
+        var editor = new JSONField(this.text,x=>{});
         return editor;
     }
 
@@ -812,10 +819,25 @@ class ExampleField extends PropertyEditorInfo{
         return true;
     }
 
+    fromModelToEditor(){
+
+    }
+
+    fromEditorToModel(newValue? : any, oldValue? : any){
+
+    }
 }
 class XMLExampleField extends PropertyEditorInfo{
+
+    constructor(public property:hl.IProperty,protected node:hl.IHighLevelNode,
+        private text : string, title?: string) {
+        super(property, node);
+        this.setDescription("")
+        if(title)this.setTitle(title);
+    }
+
     createField(){
-        var editor = new XMLField("",x=>{});
+        var editor = new XMLField(this.text,x=>{});
         return editor;
     }
 
@@ -823,6 +845,13 @@ class XMLExampleField extends PropertyEditorInfo{
         return true;
     }
 
+    fromModelToEditor(){
+
+    }
+
+    fromEditorToModel(newValue? : any, oldValue? : any){
+
+    }
 }
 class XMLSchemaField extends PropertyEditorInfo{
     createField(){
@@ -928,9 +957,9 @@ class TypeSelectBox extends SelectBox {
 
 class TreeField extends UI.Panel implements UI.IField<any>{
 
-    constructor(private str:hl.IStructuredValue,caption:string) {
+    constructor(private input:lowLevel.ILowLevelASTNode,caption:string) {
         super();
-        var input=str.lowLevel();
+
         var rend={
 
 
@@ -977,10 +1006,23 @@ class StructuredField extends PropertyEditorInfo{
         super(pr,node);
     }
     createField(){
-        var tm= new TreeField(this.stvalue,this.title()+":");
+        var tm= new TreeField(this.stvalue.lowLevel(),this.title()+":");
         return tm;
     }
 }
+
+class LowLevelTreeField extends PropertyEditorInfo{
+    constructor(pr:hl.IProperty,node:hl.IHighLevelNode,private lowLevel:lowLevel.ILowLevelASTNode,
+    title?: string){
+        super(pr,node);
+        if(title) this.setTitle(title);
+    }
+    createField(){
+        var tm= new TreeField(this.lowLevel,this.title()+":");
+        return tm;
+    }
+}
+
 function category(p:hl.IProperty,node:hl.IHighLevelNode):string{
     if (p.getAdapter(def.RAMLPropertyService).isKey()||p.isRequired()){
         return null;
@@ -1045,6 +1087,23 @@ var valueOptions = function (x:hl.IProperty, node:hl.IHighLevelNode):string[] {
     }
     return _.unique(vls);
 };
+
+function addExampleControl(property: hl.IProperty, node : hl.IHighLevelNode,
+    exampleElement : hl.IHighLevelNode, example : def.rt.nominalTypes.IExpandableExample,
+    container : TopLevelNode) {
+
+    if (example.isYAML()) {
+        container.addItemToCategory(category(property, node),
+            new LowLevelTreeField(property, node, exampleElement.lowLevel(), example.name()));
+    } else if (example.isJSONString()) {
+        container.addItemToCategory(category(property, node),
+            new ExampleField(property, node, example.asString(), example.name()));
+    } else if (example.isXMLString()) {
+        container.addItemToCategory(category(property, node),
+            new XMLExampleField(property, node, example.asString(), example.name()));
+    }
+}
+
 export function buildItem(node:hl.IHighLevelNode,dialog:boolean){
     rp.utils.updateType(node);
     var props=node.propertiesAllowedToUse();
@@ -1113,14 +1172,14 @@ export function buildItem(node:hl.IHighLevelNode,dialog:boolean){
                 return;
             }
 
-            if (x.getAdapter(def.RAMLPropertyService).isExampleProperty()&&node.name()=="application/json"){
-                result.addItemToCategory(category(x,node), new ExampleField(x, node));
-                return;
-            }
-            if (x.getAdapter(def.RAMLPropertyService).isExampleProperty()&&node.name()=="application/xml"){
-                result.addItemToCategory(category(x,node), new XMLExampleField(x, node));
-                return;
-            }
+            // if (x.getAdapter(def.RAMLPropertyService).isExampleProperty()&&node.name()=="application/json"){
+            //     result.addItemToCategory(category(x,node), new ExampleField(x, node));
+            //     return;
+            // }
+            // if (x.getAdapter(def.RAMLPropertyService).isExampleProperty()&&node.name()=="application/xml"){
+            //     result.addItemToCategory(category(x,node), new XMLExampleField(x, node));
+            //     return;
+            // }
             var nm=node.attr(x.nameId());
             if (nm && typeof nm.value() ==="object"){
                 result.addItemToCategory(category(x,node), new StructuredField(x, node,<hl.IStructuredValue>nm.value()));
@@ -1180,6 +1239,35 @@ export function buildItem(node:hl.IHighLevelNode,dialog:boolean){
             }
         }
     })
+    if (universehelpers.isTypeDeclarationSibling(node.definition())) {
+        props.forEach(x=> {
+            if (universehelpers.isExampleProperty(x)) {
+                var exampleElement = node.element(universe.Universe10.TypeDeclaration.properties.example.name);
+                if (exampleElement) {
+                    var examples = node.localType().examples();
+                    if (examples && examples.length == 1){
+                        var example = examples[0];
+                        addExampleControl(x, node, exampleElement, example, result);
+                    }
+                }
+            } else if (universehelpers.isExamplesProperty(x)) {
+                var exampleElements  =
+                    node.elementsOfKind(universe.Universe10.TypeDeclaration.properties.examples.name);
+                if (exampleElements && exampleElements.length > 0) {
+                    var examples = node.localType().examples();
+                    exampleElements.forEach(exampleElement=>{
+                        var exampleElementName = exampleElement.attrValue(universe.Universe10.ExampleSpec.properties.name.name);
+                        if (exampleElementName) {
+                            var example = _.find(examples, currentExample=>currentExample.name() == exampleElementName);
+                            if (example) {
+                                addExampleControl(x, node, exampleElement, example, result);
+                            }
+                        }
+                    })
+                }
+            }
+        })
+    }
     if (!dialog) {
         result.addItemToCategory("Palette", new ActionsItem(node));
         var visibleActions = contextActions.calculateCurrentActions(contextActions.TARGET_RAML_EDITOR_NODE);
