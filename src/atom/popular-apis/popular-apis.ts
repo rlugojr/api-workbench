@@ -135,7 +135,7 @@ class RamlOutline extends SC.Scrollable {
         var outer =this;
         var home = fileDialogUtils.getHome();
         var dir = path.resolve(home,"apis");
-        var apiListData = require('../util/config/apiList.json');
+        var apiListData = require('../../util/config/apiList.json');
 
         var secHC = UI.hc();
 

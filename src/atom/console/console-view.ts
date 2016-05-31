@@ -12,7 +12,6 @@ import AtomUtil = require('../util/atom')
 import rp=require("raml-1-parser")
 
 import RamlWrapper1 =rp.api10;
-import RamlWrapperUtil = require('../util/raml-wrapper')
 import JSYaml = rp.ll;
 import Render = require('./render')
 import Disposable = Atom.Disposable
@@ -59,6 +58,24 @@ export interface ConsolePageState {
   requestProgress?: number
   requestError?: string
   requestResponse?: any
+}
+
+interface ParameterMap {
+  [name: string]: string
+}
+
+function template (str: string, replace: ParameterMap, defaults?: ParameterMap): string {
+  return str.replace(/\{([^{}]+)\}/g, function (match, key) {
+    if (replace && replace[key] != null) {
+      return replace[key]
+    }
+
+    if (defaults && defaults[key] != null) {
+      return defaults[key]
+    }
+
+    return ''
+  })
 }
 
 /**
@@ -375,8 +392,8 @@ export class RAMLConsoleView extends SpacePenViews.ScrollView {
     var methodHeaders = node.headers()
     var methodQuery = node.queryParameters()
 
-    var url = RamlWrapperUtil.template(baseUri.value() || '', this.state.baseUriParameters, defaultBaseUriParameters).replace(/\/$/, '')
-    var path = RamlWrapperUtil.template((<RamlWrapper1.Resource> node.parent()).completeRelativeUri(), this.state.uriParameters, defaultUriParameters)
+    var url = template(baseUri.value() || '', this.state.baseUriParameters, defaultBaseUriParameters).replace(/\/$/, '')
+    var path = template((<RamlWrapper1.Resource> node.parent()).completeRelativeUri(), this.state.uriParameters, defaultUriParameters)
 
     if (securityScheme) {
       methodQuery = methodQuery.concat(securityScheme.describedBy().queryParameters())

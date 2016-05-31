@@ -1,4 +1,4 @@
-/// <reference path="../../../typings/main.d.ts" />
+/// <reference path="../../typings/main.d.ts" />
 import path      = require('path');
 import fs      = require('fs');
 var mkdirp      = require('mkdirp');
