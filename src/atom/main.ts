@@ -1,19 +1,19 @@
 /// <reference path="../../typings/main.d.ts" />
 
 import Console = require('./console/index');
-import apiList = require('./raml1/popularApis');
+import apiList = require('./popular-apis/popular-apis');
 import jQuery = require('jquery');
-import editorTools=require('./raml1/editorTools')
-import quickCommands = require('./util/quick-commands')
-import provider=require("./raml1/provider")
-import quickOutline=require("./raml1/quickOutline")
-import decl=require("./raml1/assistUtils")
-import linterUI=require("./raml1/linterUI")
+import editorTools=require('./editor-tools/editor-tools')
+import quickCommands = require('./quick-commands/quick-commands')
+import provider=require("./suggestion/provider")
+import quickOutline=require("./quick-outline/quick-outline")
+import decl=require("./dialogs/assist-utils")
+import linterUI=require("./core/linter-ui")
 var CompositeDisposable = require('atom').CompositeDisposable;
-import commandManager = require("./raml1/commandManager")
-import contextMenu = require("./raml1/contextMenu")
-import commonContextActions = require("./raml1/commonContextActions")
-import quickFixActions = require("./raml1/quickFix")
+import commandManager = require("./quick-commands/command-manager")
+import contextMenu = require("./context-menu/contextMenu")
+import commonContextActions = require("./context-menu/commonContextActions")
+import quickFixActions = require("./context-menu/quickFix")
 
 
 module package_entry_point {

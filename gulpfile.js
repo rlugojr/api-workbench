@@ -162,7 +162,7 @@ gulp.task('typescript:prepare', ['typescript:prepare-compile'], function (done) 
 });
 
 gulp.task('api-list', [], function (done) {
-  return spawn('node', [join(__dirname, 'src/atom/util/apilist-manager.js')], done);
+  return spawn('node', [join(__dirname, 'src/util/apilist-manager.js')], done);
 });
 
 
