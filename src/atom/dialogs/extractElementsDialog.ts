@@ -639,6 +639,9 @@ export class AbstractlMoveElementsDialog {
         }
 
         this.leftPanel.setInput(this.getParentNode());
+
+        this.stubRoot.resetChildren();
+
         this.rightPanel.setInput(this.stubRoot);
 
         this.performValidation()
@@ -659,6 +662,9 @@ export class AbstractlMoveElementsDialog {
         }
 
         this.leftPanel.setInput(this.getParentNode());
+
+        this.stubRoot.resetChildren();
+
         this.rightPanel.setInput(this.stubRoot);
 
         this.performValidation()
@@ -1020,7 +1026,7 @@ export class ExtractLibraryDialog extends AbstractlMoveElementsDialog {
             //existing "uses" found, inserting there
             var positionToInsert = usesMapping.keyEnd() + 1
 
-            var text = "\n  " +(sequenceFound?"- ":"")+ libraryQualifier + ": !include " + relativePath
+            var text = "\n  " +(sequenceFound?"- ":"")+ libraryQualifier + ": " + relativePath
             this.insertTextToActiveEditor(positionToInsert, text);
         } else {
             var titleNode = _.find(this.getParentNode().children(), child => {
@@ -1034,13 +1040,13 @@ export class ExtractLibraryDialog extends AbstractlMoveElementsDialog {
                 //title node found, inserting after it
                 var positionToInsert : number = titleNode.lowLevel().valueEnd()
 
-                var text = "\n" + "uses:" + "\n  " + libraryQualifier + ": !include " + relativePath
+                var text = "\n" + "uses:" + "\n  " + libraryQualifier + ": " + relativePath
                 this.insertTextToActiveEditor(positionToInsert, text);
             } else {
                 //nothing happens, inserting in the end of the file
                 var positionToInsert = this.getParentNode().lowLevel().end()
 
-                var text = "\n" + "uses:" + "\n  " + libraryQualifier + ": !include " + relativePath
+                var text = "\n" + "uses:" + "\n  " + libraryQualifier + ": " + relativePath
                 this.insertTextToActiveEditor(positionToInsert, text);
             }
         }

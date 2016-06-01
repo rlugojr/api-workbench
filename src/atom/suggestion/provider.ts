@@ -5,6 +5,9 @@ import highlevel=rp.hl;
 import def=rp.ds;
 import search=rp.search;
 import lowLevel=rp.ll;
+
+import _ = require('underscore');
+
 import suggestions = require('raml-suggestions');
 
 export var selector= '.source.raml'
