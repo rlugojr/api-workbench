@@ -118,30 +118,9 @@ export class ExtractTypesAndTraitsDialog{
         buttonBar.addChild(UI.label("",null,null,null).setStyle("flex","1"))
         buttonBar.addChild(UI.button("Cancel",UI.ButtonSizes.NORMAL,UI.ButtonHighlights.NO_HIGHLIGHT,UI.Icon.NONE,x=>{zz.destroy()}).margin(10,10))
         var okButton=UI.button("Extract",UI.ButtonSizes.NORMAL,UI.ButtonHighlights.SUCCESS,UI.Icon.NONE,x=>{
-            this.filters.removals.forEach(x=>node.remove(x));
-            if (this._resourceType) {
-                var t = node.attr("type");
-                if (!t) {
-                    node.add(stubs.createAttr(node.definition().property("type"),stub.name()))
-                }
-            }
-            else{
-                var t = node.attr("is");
-                if (!t) {
-                    node.add(stubs.createAttr(node.definition().property("is"),'[' + stub.name() + ']'))
-                }
-            }
 
-            //we can not add stub directly due to a bug in a high-level AST that does not
-            //remove low-level nodes while removing high-level one
-            //node.root().add(stub);
-            var stub2 = this.createNodeStub(node)
-            stub.elements().forEach(child => (<any>stub2).add(child))
-            stub2.attr("name").setValue(tf.getBinding().get());
-            node.root().add(stub2);
+            this.apply(node, stub, tf.getBinding().get())
 
-            var cl=node.lowLevel().unit().contents();
-            this.getActiveEditor().setText(assist.cleanEmptyLines(cl));
             //this.onOk(zz);
             zz.destroy();
         })
@@ -151,6 +130,96 @@ export class ExtractTypesAndTraitsDialog{
         var html=vc.renderUI();
         zz=(<any>atom).workspace.addModalPanel( { item: html});
         html.focus();
+    }
+
+    private apply(node:hl.IHighLevelNode, stub:hl.IHighLevelNode,
+        newTypeName : string) {
+        this.filters.removals.forEach(x=>node.remove(x));
+
+        var stub2 = this.createNodeStub(node)
+        stub.elements().forEach(child => (<any>stub2).add(child))
+        stub2.attr("name").setValue(newTypeName);
+
+        var typeOrTraitValueToReplace = "_________TEMPORARY_TYPE_OR_TRAIT_VALUE_________"
+        var replacements : string[] = [];
+
+        var superAttributeName = this._resourceType ?
+            universeModule.Universe10.ResourceType.properties.type.name :
+            universeModule.Universe10.Trait.properties.is.name;
+
+        var superAttributes = node.attributes(superAttributeName);
+        var superAttrProperty = stub2.definition().property(superAttributeName);
+        if (superAttributes && superAttributes.length > 0) {
+            for (var i = 0; i < superAttributes.length; i++) {
+
+                var superAttribute = superAttributes[i];
+
+                var superAttributeLL = superAttribute.lowLevel();
+                var start = superAttributeLL.valueStart();
+                var end = superAttributeLL.valueEnd();
+                if (start <= 0) {
+                    start = superAttributeLL.start();
+                    end = superAttributeLL.end();
+                }
+
+                var typeOrTraitValueToReplaceWith =
+                    superAttributeLL.unit().contents().substr(
+                        start, end-start);
+
+                replacements.push(typeOrTraitValueToReplaceWith);
+
+            }
+
+            for (var i = 0; i < superAttributes.length; i++) {
+                var superAttribute = superAttributes[i];
+                node.remove(superAttribute);
+            }
+
+            var stubAttributeValue = typeOrTraitValueToReplace;
+            if (superAttributes.length > 1) {
+                stubAttributeValue = "[" + stubAttributeValue + "]";
+            }
+            var stubSuperAttribute =
+                stubs.createAttr(superAttrProperty,
+                    stubAttributeValue);
+
+            stub2.add(stubSuperAttribute);
+
+            node.resetChildren();
+            stub2.resetChildren();
+        }
+
+        if (this._resourceType) {
+            node.add(
+                stubs.createAttr(node.definition().property(superAttributeName),
+                    stub.name()))
+        } else {
+            node.add(
+                stubs.createAttr(node.definition().property(superAttributeName),
+                    "[" + stub.name() + "]"))
+        }
+
+        node.root().add(stub2);
+
+        var cl=node.lowLevel().unit().contents();
+        if (replacements.length == 1) {
+            var totalRepalcement = replacements[0];
+            if (superAttrProperty.isMultiValue()) {
+                totalRepalcement = "[" + totalRepalcement + "]";
+            }
+
+            cl = cl.replace(typeOrTraitValueToReplace, totalRepalcement);
+        } else if (replacements.length > 1) {
+            var totalReplacement = "";
+            for (var i = 0; i < replacements.length - 1; i++) {
+                totalReplacement += replacements[i] + ", ";
+            }
+            totalReplacement += replacements[replacements.length - 1];
+
+            cl = cl.replace(typeOrTraitValueToReplace, totalReplacement);
+        }
+
+        this.getActiveEditor().setText(assist.cleanEmptyLines(cl));
     }
 
     private createNodeStub(node) {
@@ -174,6 +243,7 @@ export class ExtractTypesAndTraitsDialog{
                 k++
             });
         }
+        stub.resetChildren();
         v.setInput(node);
         v1.setInput(stub);
     }
@@ -183,6 +253,7 @@ export class ExtractTypesAndTraitsDialog{
             this.filters.removals = this.filters.removals.concat(<hl.IHighLevelNode[]>z);
         }
         z.forEach(x=>stub.add(x.copy()));
+        stub.resetChildren();
         v.setInput(node);
         v1.setInput(stub)
     }
@@ -1571,12 +1642,17 @@ function addUserDefinedSupertypes(type : hl.INodeDefinition, typesToAddTo : def.
         return
     }
 
-    typesToAddTo.push(type)
     var superTypes = (type).superTypes()
 
     if (superTypes)
-        superTypes.forEach(
-                superType => addUserDefinedSupertypes(<hl.INodeDefinition>superType, typesToAddTo))
+        superTypes.forEach(superType => {
+
+            if (superType.isUserDefined()) {
+                typesToAddTo.push(superType)
+            }
+
+            addUserDefinedSupertypes(<hl.INodeDefinition>superType, typesToAddTo)
+        })
 }
 
 export class PullUpDialog extends AbstractMoveTypePropertiesDialog {
@@ -1672,8 +1748,8 @@ export class ExtractSupertypeDialog extends AbstractMoveTypePropertiesDialog {
         parentPanel.addChild(this.superTypeName)
     }
 
-    private astRoot
-    private typeWrapper
+    private astRoot : hl.IHighLevelNode
+    private typeWrapper : rp.api10.ObjectTypeDeclaration
 
     /**
      * Intended for overriding, should return the target type.
@@ -1728,7 +1804,7 @@ export class ExtractSupertypeDialog extends AbstractMoveTypePropertiesDialog {
     }
 
     postMerge() {
-        this.astRoot.toWrapper().addToProp(this.typeWrapper, 'types');
+        (<any>this.astRoot.wrapperNode()).addToProp(this.typeWrapper, 'types');
         this.sourceType.attrOrCreate("type").setValue( this.typeWrapper.highLevel().name())
 
 
