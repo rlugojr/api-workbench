@@ -502,8 +502,14 @@ class PropertyEditorInfo extends Item{
                 }
                 return;
             }
-            attr = this.node.attrOrCreate(this.property.nameId())
+            
+            if(this.node.lowLevel().includePath() && !this.node.lowLevel().unit().resolve(this.node.lowLevel().includePath())) {
+                return;
+            }
+            
+            attr = this.node.attrOrCreate(this.property.nameId());
             attr.setValue("" + vl);
+            
         }
         else{
             if (attr){
@@ -619,6 +625,10 @@ class SimpleMultiEditor extends PropertyEditorInfo{
         }
         var ww=vl.split(",");
         var vl=ww.filter(x=>x.trim().length>0).map(x=>x.trim());
+
+        if(this.node.lowLevel().includePath() && !this.node.lowLevel().unit().resolve(this.node.lowLevel().includePath())) {
+            return;
+        }
 
         var attribute = this.node.attrOrCreate(this.property.nameId());
         attribute.setValues(vl)
