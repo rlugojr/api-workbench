@@ -28,6 +28,7 @@ import tooltip=require("../core/tooltip-manager")
 import yaml = require("yaml-ast-parser")
 
 import editorTools = require("../editor-tools/editor-tools")
+import {universeHelpers} from "raml-1-parser/dist/index";
 
 interface QuickFix{
     title:string
@@ -56,20 +57,52 @@ export function createGlobalSchema(attr:hl.IAttribute){
 `)
    atom.workspace.open(shFile,{});
 }
-export function createGlobalSchemaFromNameAndContent(root:hl.IHighLevelNode,name:string,schp:string,content:string, absolutePath?: string){
-    var t:def.NodeClass=<def.NodeClass>root.definition().universe().type("GlobalSchema");
-    var sc=stubs.createStubNode(t,(<any>t.universe().type("Api")).property("schemas"),""+name);
-    sc.attrOrCreate("value").setValue("!include "+schp)
-    root.add(sc);
 
+export function createGlobalSchemaFromNameAndContent(root:hl.IHighLevelNode,name:string,schp:string,content:string, absolutePath?: string){
+    if (universeHelpers.isRAML10Node(root)) {
+        createGlobalSchemaFromNameAndContent10(root, name, schp, content, absolutePath);
+    } else if (universeHelpers.isRAML08Node(root)) {
+        createGlobalSchemaFromNameAndContent08(root, name, schp, content, absolutePath);
+    }
+}
+
+function createSchemaFile(content : string, schemaPath : string, absolutePath? : string) {
     var ed=getActiveEditor()
-    var sdir=absolutePath ? path.dirname(absolutePath) : path.resolve(path.dirname(ed.getPath()),path.dirname(schp));
+    var sdir=absolutePath ? path.dirname(absolutePath) : path.resolve(path.dirname(ed.getPath()),path.dirname(schemaPath));
     if (!fs.existsSync(sdir)){
         fs.mkdirSync(sdir);
     }
-    var shFile=absolutePath ? absolutePath : path.resolve(path.dirname(ed.getPath()),schp);
+    var shFile=absolutePath ? absolutePath : path.resolve(path.dirname(ed.getPath()),schemaPath);
     fs.writeFileSync(shFile,content)
 }
+
+export function createGlobalSchemaFromNameAndContent10(root:hl.IHighLevelNode,name:string,
+                                                       schemaPath:string,content:string, absolutePath?: string){
+    var t:def.NodeClass=<def.NodeClass>root.definition().universe().type(universes.Universe10.TypeDeclaration.name);
+    var sc=stubs.createStubNode(t,
+        (<any>t.universe().type(universes.Universe10.Api.name)).property(universes.Universe10.Api.properties.types.name),
+        ""+name);
+
+    sc.attrOrCreate(universes.Universe10.TypeDeclaration.properties.type.name).setValue("!include "+schemaPath)
+
+    root.add(sc);
+
+    createSchemaFile(content, schemaPath, absolutePath);
+}
+
+export function createGlobalSchemaFromNameAndContent08(root:hl.IHighLevelNode,name:string,schp:string,content:string, absolutePath?: string){
+    var t:def.NodeClass=<def.NodeClass>root.definition().universe().type(universes.Universe08.GlobalSchema.name);
+    var sc=stubs.createStubNode(t,
+        (<any>t.universe().type(universes.Universe08.Api.name)).property(universes.Universe08.Api.properties.schemas.name),
+        ""+name);
+
+    sc.attrOrCreate(universes.Universe08.GlobalSchema.properties.value.name).setValue("!include "+schp)
+
+    root.add(sc);
+
+    createSchemaFile(content, schp, absolutePath);
+}
+
 export function saveExample(r:hl.IHighLevelNode,schp:string,content:string){
     var ed=getActiveEditor();
     var sdir=path.resolve(path.dirname(ed.getPath()),path.dirname(schp));
