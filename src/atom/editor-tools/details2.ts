@@ -974,17 +974,23 @@ class TreeField extends UI.Panel implements UI.IField<any>{
 
 
             render(n:lowLevel.ILowLevelASTNode){
-                var str=n.key();
-                var val=n.value();
-                if (typeof val!='string'){
-                    val="";
+                var key=n.key();
+                var value=n.value();
+                if (typeof value!='string'){
+                    value="";
                 }
-                if (val.length>30){
-                    val=val.substring(0,20)+"...";
+                if (value.length>30){
+                    value=value.substring(0,20)+"...";
                 }
-                var res=UI.label(n.key(),UI.Icon.CIRCUIT_BOARD,UI.TextClasses.HIGHLIGHT);
-                val=UI.label(val?(":"+val):"",UI.Icon.NONE,UI.TextClasses.SUCCESS);
-                var result=UI.hc(res,val);
+
+                if (!key && value) {
+                    key = value;
+                    value = "";
+                }
+
+                var res=UI.label(key,UI.Icon.CIRCUIT_BOARD,UI.TextClasses.HIGHLIGHT);
+                value=UI.label(value?(":"+value):"",UI.Icon.NONE,UI.TextClasses.SUCCESS);
+                var result=UI.hc(res,value);
                 return result;
             }
         };
