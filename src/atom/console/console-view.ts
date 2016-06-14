@@ -12,6 +12,7 @@ import AtomUtil = require('../util/atom')
 import rp=require("raml-1-parser")
 
 import RamlWrapper1 =rp.api10;
+import RamlWrapper08 =rp.api08;
 import JSYaml = rp.ll;
 import Render = require('./render')
 import Disposable = Atom.Disposable
@@ -23,7 +24,7 @@ import CompositeDisposable = Atom.CompositeDisposable
 export interface ConsoleViewOptions {
   editorId?: string
   filename?: string
-  raml?: RamlWrapper1.Api
+  raml?: RamlWrapper1.Api | RamlWrapper08.Api
   state?: ConsoleState
 }
 
@@ -88,7 +89,7 @@ export class RAMLConsoleView extends SpacePenViews.ScrollView {
   file: pathwatcher.File
   editor: AtomCore.IEditor
   state: ConsoleState
-  raml: RamlWrapper1.Api
+  raml: RamlWrapper1.Api | RamlWrapper08.Api
   errors: Error[]
   project: JSYaml.IProject
   request: popsicle.Request
@@ -376,7 +377,7 @@ export class RAMLConsoleView extends SpacePenViews.ScrollView {
     this.abortRequest()
 
     var baseUri = this.raml.baseUri()
-    var node: RamlWrapper1.Method = this.raml.highLevel().findById(this.state.view.id).wrapperNode()
+    var node: RamlWrapper1.Method | RamlWrapper08.Method = this.raml.highLevel().findById(this.state.view.id).wrapperNode()
 
     // Remove old request errors.
     this.setPageState({ requestError: undefined })
@@ -386,11 +387,15 @@ export class RAMLConsoleView extends SpacePenViews.ScrollView {
       return
     }
 
-    var securityScheme = this.state.securityScheme ? this.raml.securitySchemes().filter(x => x.name() === this.state.securityScheme)[0] : undefined
+    var securityScheme : RamlWrapper1.AbstractSecurityScheme | RamlWrapper08.AbstractSecurityScheme = this.state.securityScheme ?
+        (<(RamlWrapper1.AbstractSecurityScheme | RamlWrapper08.AbstractSecurityScheme)[]>
+            this.raml.securitySchemes()).filter(x => x.name() === this.state.securityScheme)[0] : undefined
     var defaultBaseUriParameters = this.toDefaultParameters(this.raml.allBaseUriParameters())
     var defaultUriParameters = this.toDefaultParameters((<RamlWrapper1.Resource> node.parent()).allUriParameters())
-    var methodHeaders = node.headers()
-    var methodQuery = node.queryParameters()
+    var methodHeaders  : (RamlWrapper1.TypeDeclaration | RamlWrapper08.Parameter)[] =
+        node.headers();
+    var methodQuery : (RamlWrapper1.TypeDeclaration | RamlWrapper08.Parameter)[] =
+        node.queryParameters();
 
     var url = template(baseUri.value() || '', this.state.baseUriParameters, defaultBaseUriParameters).replace(/\/$/, '')
     var path = template((<RamlWrapper1.Resource> node.parent()).completeRelativeUri(), this.state.uriParameters, defaultUriParameters)
@@ -430,7 +435,7 @@ export class RAMLConsoleView extends SpacePenViews.ScrollView {
     )
   }
 
-  toDefaultParameters (parameters: RamlWrapper1.TypeDeclaration[]) {
+  toDefaultParameters (parameters: (RamlWrapper1.TypeDeclaration | RamlWrapper08.Parameter)[]) {
     var params: { [key: string]: string } = {}
 
     parameters.forEach(parameter => {
@@ -442,7 +447,8 @@ export class RAMLConsoleView extends SpacePenViews.ScrollView {
     return params
   }
 
-  usedParameters (state: { [key: string]: string }, parameters: RamlWrapper1.TypeDeclaration[]) {
+  usedParameters (state: { [key: string]: string },
+                  parameters: (RamlWrapper1.TypeDeclaration | RamlWrapper08.Parameter)[]) {
     var params: { [key: string]: string } = {}
 
     parameters.forEach(param => {
@@ -471,7 +477,9 @@ export class RAMLConsoleView extends SpacePenViews.ScrollView {
       this.errors = errors
 
       if (!errors.length) {
-        this.raml = <rp.api10.Api>rp.expander.expandTraitsAndResourceTypes(baseUnit.highLevel().asElement().wrapperNode());
+        var originalRoot = baseUnit.highLevel().asElement().wrapperNode();
+        this.raml = <RamlWrapper1.Api | RamlWrapper08.Api>
+            rp.expander.expandTraitsAndResourceTypes(originalRoot);
       }
     } catch (error) {
       this.raml = undefined
