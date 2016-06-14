@@ -126,60 +126,66 @@ function isRAML08(node : highLevelAst.AbstractWrapperNode) : boolean {
 export class Console extends PureComponent<ConsoleProps, any> {
 
   isSupportedNode (node: any) {
-    var className = node.wrapperClassName()
 
-    switch (className) {
-      case 'ObjectTypeDeclarationImpl':
-      case 'ResponseImpl':
-      case 'TypeDeclarationImpl':
-      case 'LibraryImpl':
-      case 'SecuritySchemePartImpl':
-      case 'LibraryImpl':
-      case 'SecuritySchemePartImpl':
-      case 'OAuth1SecuritySchemeSettingsImpl':
-      case 'OAuth2SecuritySchemeSettingsImpl':
-        return false
-      default:
-        return true
-    }
+    return !(
+      RamlWrapper1.isObjectTypeDeclaration(node) ||
+      RamlWrapper1.isResponse(node) ||
+      RamlWrapper1.isTypeDeclaration(node) ||
+      RamlWrapper1.isLibrary(node) ||
+      RamlWrapper1.isSecuritySchemePart(node) ||
+      RamlWrapper1.isOAuth1SecurityScheme(node) ||
+      RamlWrapper1.isOAuth2SecurityScheme(node) ||
+      RamlWrapper08.isResponse(node) ||
+      RamlWrapper08.isSecuritySchemePart(node) ||
+      RamlWrapper08.isOAuth1SecurityScheme(node) ||
+      RamlWrapper08.isOAuth2SecurityScheme(node));
   }
 
   renderNode (node: highLevelAst.BasicNode) {
     var props = <NodeProps<any>> extend(this.props, { node })
 
-    if (node.wrapperClassName() === 'TraitImpl') {
+    if (RamlWrapper1.isTrait(node) ||
+        RamlWrapper08.isTrait(node)) {
+
       return React.createElement(Trait, props)
     }
 
-    if (node.wrapperClassName() === 'ResourceTypeImpl') {
+    if (RamlWrapper1.isResourceType(node) ||
+        RamlWrapper08.isResourceType(node)) {
+
       return React.createElement(ResourceType, props)
     }
 
-    if (
-      node.wrapperClassName() === 'AbstractSecuritySchemeImpl' ||
-      node.wrapperClassName() === 'OAuth1SecuritySchemeImpl' ||
-      node.wrapperClassName() === 'OAuth2SecuritySchemeImpl'
-    ) {
+    if (RamlWrapper1.isAbstractSecurityScheme(node) ||
+        RamlWrapper08.isAbstractSecurityScheme(node) ||
+        RamlWrapper1.isOAuth1SecurityScheme(node) ||
+        RamlWrapper08.isOAuth1SecurityScheme(node) ||
+        RamlWrapper1.isOAuth2SecurityScheme(node) ||
+        RamlWrapper08.isOAuth2SecurityScheme(node)) {
+
       return React.createElement(SecurityScheme, props)
     }
 
-    // if (node.wrapperClassName() === 'GlobalSchemaImpl') {
-    //   return React.createElement(GlobalSchema, props)
-    // }
+    if (RamlWrapper1.isResource(node) ||
+        RamlWrapper08.isResource(node)) {
 
-    if (node.wrapperClassName() === 'ResourceImpl') {
       return React.createElement(Resource, props)
     }
 
-    if (node.wrapperClassName() === 'DocumentationItemImpl') {
+    if (RamlWrapper1.isDocumentationItem(node) ||
+        RamlWrapper08.isDocumentationItem(node)) {
+
       return React.createElement(Documentation, props)
     }
 
-    if (node.wrapperClassName() === 'MethodImpl') {
+    if (RamlWrapper1.isMethod(node) || RamlWrapper08.isMethod(node)) {
+
       return React.createElement(Method, props)
     }
 
-    if (node.wrapperClassName() === 'ApiImpl') {
+    if (RamlWrapper1.isApi(node) || RamlWrapper08.isApi(node) ||
+        RamlWrapper1.isExtension(node) || RamlWrapper1.isOverlay(node)) {
+
       return React.createElement(Root, props)
     }
 
@@ -304,6 +310,20 @@ export class Console extends PureComponent<ConsoleProps, any> {
     }
 
     var highLevelNode = this.getCurrentNode()
+    if (!highLevelNode) {
+      return React.createElement(
+          Block,
+          null,
+          React.createElement(TitleText, { title: 'Unsupported fragment' }),
+          React.createElement(
+              Block,
+              null,
+              'This type of fragment is not supported. Only APIs, Overlays and Extensions can be displayed.'
+          )
+      )
+    }
+
+
     var node: highLevelAst.BasicNode
 
     if (this.props.errors.length) {
@@ -1719,13 +1739,15 @@ class ResourceTypesAndTraits extends PureComponent<NodeProps<RamlApi | RamlResou
     var node = this.props.node
     var navigate = this.props.navigate
 
-    if (node.wrapperClassName() === 'ResourceImpl' && (<RamlResourceBase> node).type()) {
+    if ((RamlWrapper1.isResource(node) || RamlWrapper08.isResource(node))
+        && (<RamlResourceBase> node).type()) {
+
       types.push(React.createElement("NavigateLabel", { title: 'Type', key: 'type', node: (<RamlResourceBase> node).type(), navigate }))
     }
 
     if (RamlWrapper1.isResource(node) || RamlWrapper08.isResource(node)
-        || RamlWrapper1.isMethod(node) || RamlWrapper08.isMethod(node)
-      /*node.wrapperClassName() === 'ResourceImpl' || node.wrapperClassName() === 'MethodImpl'*/) {
+        || RamlWrapper1.isMethod(node) || RamlWrapper08.isMethod(node)) {
+
       (<RamlTraitRef[]>(<RamlResource | RamlMethod> node).is()).forEach((is, index) => {
         types.push(React.createElement("NavigateLabel", { title: 'Trait', key: `is:${index}`, node: is, navigate }))
       })
@@ -1875,11 +1897,14 @@ function getNodeLabel (node: highLevelAst.IAttribute | highLevelAst.IHighLevelNo
   if (!name && node.getKind() === highLevelAst.NodeKind.NODE) {
     var wrapper = (<highLevelAst.IHighLevelNode> node).wrapperNode()
 
-    if (wrapper.wrapperClassName() === 'DocumentationItemImpl') {
+    if (RamlWrapper1.isDocumentationItem(wrapper) ||
+        RamlWrapper08.isDocumentationItem(wrapper)) {
       return (<RamlDocumentationItem> wrapper).title()
     }
 
-    if (wrapper.wrapperClassName() === 'ApiImpl') {
+    if (RamlWrapper1.isApi(wrapper) || RamlWrapper08.isApi(wrapper) ||
+        RamlWrapper1.isExtension(wrapper) || RamlWrapper1.isOverlay(wrapper)) {
+
       return 'Home'
     }
   }
