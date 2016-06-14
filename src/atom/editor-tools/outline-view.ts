@@ -235,6 +235,10 @@ function fullPath(node: hl.IHighLevelNode) {
 }
 export function simpleTree(input: hl.IParseResult, selectionListener: UI.ISelectionListener<any>, filterFunc: (x:hl.IHighLevelNode)=>boolean, opener: (x:hl.IParseResult)=>void=null) {
     var viewer = UI.treeViewer(x=>{
+        if(x === null) {
+            return [];
+        }
+
         if (x.parent()==null){
         return getChildren(x).filter(x=>filterFunc(<hl.IHighLevelNode> x));
         }
@@ -268,7 +272,9 @@ export function createTree(p: hl.IParseResult, selectionListener: (e : UI.Select
         if (selectedTab) {
             var selection = selectedTab.getSelection();
             if (selection && selection.elements && selection.elements.length > 0) {
-                selectionListener(new UI.SelectionChangedEvent(selectedTab, null, selection))
+                selectionListener(new UI.SelectionChangedEvent(selectedTab, null, selection));
+
+                selectedTab.customizePanel(true);
             }
         }
     })
