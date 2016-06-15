@@ -262,10 +262,10 @@ export function createTree(p: hl.IParseResult, selectionListener: (e : UI.Select
 
     var folder = new UI.TabFolder();
 
-    folder.add("Resources", UI.Icon.SEARCH, outline, 'raml-icon');
-    folder.add("Schemas & Types", UI.Icon.SEARCH, schemas, 'raml-icon');
-    folder.add("Resource Types & Traits", UI.Icon.SEARCH, types, 'raml-icon');
-    folder.add("Other", UI.Icon.SEARCH, other, 'raml-icon');
+    folder.add("Resources", UI.Icon.SEARCH, outline, 'raml-icon-custom');
+    folder.add("Schemas & Types", UI.Icon.SEARCH, schemas, 'raml-icon-custom');
+    folder.add("Resource Types & Traits", UI.Icon.SEARCH, types, 'raml-icon-custom');
+    folder.add("Other", UI.Icon.SEARCH, other, 'raml-icon-custom');
     folder.setSelectedIndex(0)
     folder.setOnSelected(()=>{
         var selectedTab = <UI.TreeViewer<hl.IParseResult, hl.IParseResult>> folder.selectedComponent();
