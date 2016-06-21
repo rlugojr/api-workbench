@@ -631,7 +631,7 @@ function renameInProperty(property : hl.IAttribute, contentToReplace : string, r
     property.setValue(replaceWith)
 }
 function getKey(t: def.AnnotationType,n:lowLevel.ILowLevelASTNode){
-    var up=new def.UserDefinedProp("name");
+    var up=new def.UserDefinedProp("name", null);
     //up.withDomain(this);
     up.withRange(this.universe().type(universes.Universe10.StringType.name));
     up.withFromParentKey(true);
