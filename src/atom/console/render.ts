@@ -1012,6 +1012,17 @@ class AbstractMethod extends PureComponent<NodeProps<RamlMethodBase>, {}> {
     )
   }
 
+  exampleToString(example : RamlWrapper1.ExampleSpec) : string {
+    var exampleValue = example.value();
+    if (exampleValue == null) return null;
+
+    if (typeof(exampleValue) == "string") {
+      return <string> exampleValue;
+    }
+
+    return JSON.stringify(exampleValue, null, 2)
+  }
+
   createExampleParts(body: RamlBody) : any[]{
     if (isRAML10(body)) {
       var bodyType = <RamlWrapper1.TypeDeclaration>body;
@@ -1026,7 +1037,7 @@ class AbstractMethod extends PureComponent<NodeProps<RamlMethodBase>, {}> {
 
           return React.createElement(<any>MarkupBlock, {
             key: displayName,
-            content: example.value(),
+            content: this.exampleToString(example),
             title: "Example",
             name: exampleName,
             mime: (<RamlWrapper1.TypeDeclaration>body).name(),
@@ -1037,7 +1048,7 @@ class AbstractMethod extends PureComponent<NodeProps<RamlMethodBase>, {}> {
       }
 
       var singleExampleNode = bodyType.example();
-      var singleExampleContent = singleExampleNode?singleExampleNode.value():null;
+      var singleExampleContent = singleExampleNode?this.exampleToString(singleExampleNode):null;
       if (singleExampleContent && singleExampleContent != "null" && typeof(singleExampleContent) == "string") {
         return [React.createElement(<any>MarkupBlock, {
           content: singleExampleContent,
