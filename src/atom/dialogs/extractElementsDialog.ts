@@ -1224,10 +1224,9 @@ export class ExtractOverlayDialog extends AbstractlMoveElementsDialog {
 
         var absolutePath = path.resolve(path.dirname(this.getActiveEditor().getPath()), trimmed);
 
-        //TODO uncomment this:
-        //if (fs.existsSync(absolutePath)) {
-        //    return "Destination overlay already exists"
-        //}
+        if(fs.existsSync(absolutePath)) {
+           return "Destination overlay already exists"
+        }
 
         return null
     }
