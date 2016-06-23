@@ -99,12 +99,20 @@ export function lint(textEditor:AtomCore.IEditor) {
     return result;
 }
 
+function isRAMLUnit(editor) {
+    var contents = editor.getBuffer().getText();
+
+    return contents.match(/^\s*#%RAML\s+(\d\.\d)\s*(\w*)\s*$/m);
+}
+
 function actualLint(textEditor:AtomCore.IEditor) {
     execLinterCallback(textEditor);
 
     if(rr.hasAsyncRequests()) {
         return [];
     }
+
+    if (!isRAMLUnit(textEditor)) return [];
 
     var l=new Date().getTime();
     var astNode=editorManager.ast(textEditor);
