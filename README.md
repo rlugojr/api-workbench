@@ -8,6 +8,8 @@
 
 This repository contains the source code for the API Workbench plugin that you can easily install into [Github's Atom Editor](https://atom.io/).
 
+The main API Workbench site: [www.apiworkbench.com](http://apiworkbench.com)
+
 Additional information such as tips on installation may be found in the [wiki](https://github.com/mulesoft/api-workbench/wiki).
 
 ## Installation Guide
@@ -16,16 +18,12 @@ Dependencies:
 
 * Atom ([Installation Guide](http://flight-manual.atom.io/getting-started/sections/installing-atom/))
 
-From Github
-
 ```
-git clone https://github.com/mulesoft/api-workbench.git --branch code
-cd api-workbench
-apm link
-apm install
+apm install api-workbench
 ```
 
-This version is currently under development. As soon as we merge it back to the master branch and publish it to APM, you will be able to install it using Atom again.
+Alternatively, open `Settings/Preferences -> Install` and search for `api-workbench`.
+
 
 ## Contribution
 

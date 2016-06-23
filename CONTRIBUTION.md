@@ -28,6 +28,40 @@ Steps to Reproduce:
 * Before submitting a pull request, you need to execute `squash commits`. Submit the pull request afterwards to have them considered for merging into the master repo;
 * A good summary of some workflow best practice can be found in this [article]( http://blakeembrey.com/articles/2013/04/contributing-to-open-source/).
 
+## Development environment
+
+### Dependencies
+
+* [Github's Atom Editor](https://atom.io/)
+* [NodeJS](https://nodejs.org)
+
+After installing Atom, activate `Atom->Install Shell Commands` in Atom menu.
+
+### Installation
+
+1. If other workbench development installation is linked, apm unlink it.
+2. `git clone https://github.com/mulesoft/api-workbench.git`
+3. `cd api-workbench`
+4. `apm install`
+5. `npm run devInstall`
+6. `npm run buildall`
+7. `apm link`
+
+This command sequence will clone a number of GIT repositories to the parent folder of API Workbench repository clone, link repositories together, install NPM dependencies and build projects to produce JavaScript.
+
+After installation is complete, Atom will have API Workbench package linked from the locally built JavaScript sources. To rebuild the project after the TypeScript source code changes run `npm run buildall` again.
+
+Individual sub-projects can be rebuilt using `npm run build` command launched in the respective project directory.
+
+### IDE
+
+The recommended IDE is [IntelliJ IDEA Ultimate](https://www.jetbrains.com/idea/).
+Alternatively, following IDEs can be used:
+* [Atom](https://atom.io/) with [atom-typescript](https://atom.io/packages/atom-typescript) package.
+* [Eclipse](https://eclipse.org/downloads/) with [Palantir's TypeScript plug-in](https://marketplace.eclipse.org/content/typescript), [TypEcs](http://typecsdev.com/), or any other TypeScript plug-in.
+* [Visual Studio](https://www.microsoft.com/en-us/download/details.aspx?id=48593) or [Visual Studio Code](https://code.visualstudio.com/)
+
+
 ## Contribution guidelines
 
 ### Contributor’s agreement
