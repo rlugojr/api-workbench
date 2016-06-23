@@ -27,4 +27,4 @@ Alternatively, open `Settings/Preferences -> Install` and search for `api-workbe
 
 ## Contribution
 
-If you want to contribute to this project, please read our [contribution guide](CONTRIBUTING.md) first.
+If you want to contribute to this project, please read our [contribution guide](CONTRIBUTION.md) first.
