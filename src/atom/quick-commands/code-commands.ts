@@ -81,7 +81,8 @@ function deleteNode(node: hl.IHighLevelNode) {
 
 export function getResourceParent(node: hl.IHighLevelNode) {
     if (!node || !node.property()) return null;
-    if (universeHelpers.isResourcesProperty(node.property())) return node;
+    if ((universeHelpers.isResourcesProperty(node.property()) || universeHelpers.isResourceTypesProperty(node.property()))
+        && (universeHelpers.isResourceType(node.definition()) || universeHelpers.isResourceTypeType(node.definition()))) return node;
     return getResourceParent(node.parent());
 }
 function getMethodParent(node: hl.IHighLevelNode) {
@@ -104,6 +105,14 @@ function getResourceParentOrRoot(node: hl.IHighLevelNode) {
     return rp ? rp : editorTools.aquireManager().ast;
 }
 
+export function toResource(node: hl.IHighLevelNode) {
+    if (!node || !node.property()) return null;
+
+    if ((universeHelpers.isResourcesProperty(node.property()) || universeHelpers.isResourceTypesProperty(node.property()))
+        && (universeHelpers.isResourceType(node.definition()) || universeHelpers.isResourceTypeType(node.definition()))) return node;
+
+    return null;
+}
 
 export function registerQuickCommands(cm: qc.CommandManager) {
     if (!editorTools.aquireManager()) editorTools.initEditorTools(false);
@@ -150,12 +159,12 @@ export function registerQuickCommands(cm: qc.CommandManager) {
     })
 
     contextActions.addSimpleAction("Add new method", ["Add new..."], contextActions.TARGET_RAML_EDITOR_NODE,
-        () => dialogs.newMethod(getResourceParent(editorTools.aquireManager().getSelectedNode())),
-        () => editorTools.aquireManager() && editorTools.aquireManager().getCurrentEditor() && getResourceParent(editorTools.aquireManager().getSelectedNode()) != null);
+        () => dialogs.newMethod(toResource(editorTools.aquireManager().getSelectedNode())),
+        () => editorTools.aquireManager() && editorTools.aquireManager().getCurrentEditor() && toResource(editorTools.aquireManager().getSelectedNode()) != null);
 
     contextActions.addSimpleAction("Create new URI Parameter", ["Add new..."], contextActions.TARGET_RAML_EDITOR_NODE,
-        () => dialogs.newNode(getResourceParent(editorTools.aquireManager().getSelectedNode()),"Create new URI Parameter","uriParameters"),
-        () => editorTools.aquireManager() && editorTools.aquireManager().getCurrentEditor() && (getResourceParent(editorTools.aquireManager().getSelectedNode()) != null));
+        () => dialogs.newNode(toResource(editorTools.aquireManager().getSelectedNode()),"Create new URI Parameter","uriParameters"),
+        () => editorTools.aquireManager() && editorTools.aquireManager().getCurrentEditor() && (toResource(editorTools.aquireManager().getSelectedNode()) != null));
 
     contextActions.addSimpleAction("Create new Query Parameter", ["Add new..."], contextActions.TARGET_RAML_EDITOR_NODE,
         () => dialogs.newNode(getMethodParent(editorTools.aquireManager().getSelectedNode()),"Create new Query Parameter","queryParameters"),
