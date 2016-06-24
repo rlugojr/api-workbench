@@ -7,34 +7,47 @@ import UI=require("atom-ui-lib")
 import hl=require("raml-1-parser")
 import def=hl.ds;
 
+function findBuiltInValueType(type: def.IType) {
+    if (type.isValueType() && type.isBuiltIn()) return type;
+
+    var superTypes = type.allSuperTypes();
+    if (superTypes == null || superTypes.length == 0) return null;
+
+    return _.find(superTypes, superType=>(superType.isValueType() && superType.isBuiltIn()))
+}
+
 function getValueTypeDisplayName(type: def.IType) : string {
-    if (type.nameId() == "StringType") {
+
+    var builtinValueType = findBuiltInValueType(type);
+    if (!builtinValueType) type.nameId()?type.nameId() : "";
+
+    if (builtinValueType.nameId() == "StringType") {
         return "string";
-    } else if (type.nameId() == "AnyType") {
+    } else if (builtinValueType.nameId() == "AnyType") {
         return "any";
-    } else if (type.nameId() == "NumberType") {
+    } else if (builtinValueType.nameId() == "NumberType") {
         return "number";
-    } else if (type.nameId() == "IntegerType") {
+    } else if (builtinValueType.nameId() == "IntegerType") {
         return "integer";
-    } else if (type.nameId() == "NullType") {
+    } else if (builtinValueType.nameId() == "NullType") {
         return "null";
-    } else if (type.nameId() == "TimeOnlyType") {
+    } else if (builtinValueType.nameId() == "TimeOnlyType") {
         return "time-only";
-    } else if (type.nameId() == "DateOnlyType") {
+    } else if (builtinValueType.nameId() == "DateOnlyType") {
         return "date-only";
-    } else if (type.nameId() == "DateTimeOnlyType") {
+    } else if (builtinValueType.nameId() == "DateTimeOnlyType") {
         return "datetime-only";
-    } else if (type.nameId() == "DateTimeType") {
+    } else if (builtinValueType.nameId() == "DateTimeType") {
         return "datetime";
-    } else if (type.nameId() == "FileType") {
+    } else if (builtinValueType.nameId() == "FileType") {
         return "file";
-    } else if (type.nameId() == "BooleanType") {
+    } else if (builtinValueType.nameId() == "BooleanType") {
         return "boolean";
-    } else if (type.nameId() == "AnnotationTarget") {
+    } else if (builtinValueType.nameId() == "AnnotationTarget") {
         return "annotation target";
     }
 
-    return type.nameId()?type.nameId() : "";
+    return builtinValueType.nameId()?builtinValueType.nameId() : "";
 }
 
 export function getTypeDisplayName(type: def.IType) : string {

@@ -817,6 +817,13 @@ class TypeInfo extends PureComponent<{ node: RamlWrapper1.TypeDeclaration }, {}>
       return null
     }
 
+    var definition = node.runtimeDefinition();
+    if (definition && definition.hasGenuineUserDefinedTypeInHierarchy()
+      && !definition.isGenuineUserDefinedType()) {
+      
+      definition = definition.genuineUserDefinedTypeInHierarchy();
+    }
+
     return React.createElement(
       Block,
       null,
@@ -831,7 +838,7 @@ class TypeInfo extends PureComponent<{ node: RamlWrapper1.TypeDeclaration }, {}>
           }, type)
         })
       ) : null,
-      this.renderDefinition(node.runtimeDefinition(), false)
+      this.renderDefinition(definition, false)
     )
   }
 
