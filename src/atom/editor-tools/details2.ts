@@ -976,6 +976,11 @@ class TreeField extends UI.Panel implements UI.IField<any>{
             render(n:lowLevel.ILowLevelASTNode){
                 var key=n.key();
                 var value=n.value();
+
+                if(typeof value === 'number') {
+                    value = "" + value;
+                }
+                
                 if (typeof value!='string'){
                     value="";
                 }
