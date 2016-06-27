@@ -674,7 +674,7 @@ class CheckBoxField extends PropertyEditorInfo{
             return false;
         }
 
-        if(value.trim() === 'true') {
+        if((<any>value) === true || value.trim() === 'true') {
             return true;
         }
 
