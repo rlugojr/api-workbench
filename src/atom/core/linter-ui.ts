@@ -241,6 +241,10 @@ class Acceptor implements hl.ValidationAcceptor{
         }
     }
 
+    acceptUnique(issue:hl.ValidationIssue){
+        this.accept(issue);
+    }
+
     end() {
     }
 }
