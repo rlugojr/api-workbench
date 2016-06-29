@@ -384,7 +384,31 @@ class TopLevelNode extends Category{
                 }
             }
         }
-        var errors=this.node.errors();
+
+        var errors;
+        
+        if(this.node.property() && universehelpers.isExampleProperty(this.node.property())) {
+            var parent = this.node.parent()
+
+            if(parent) {
+                var parsed = parent.parsedType();
+
+                var exampleMeta =  _.find((<any>parsed).metaInfo || [], (meta: any): boolean => {
+                    return meta && meta._name === 'example';
+                });
+
+                if(exampleMeta) {
+                    var validateObject = exampleMeta.validateSelf(this.node.types().getAnnotationTypeRegistry());
+                    
+                    errors = ((validateObject && validateObject.getErrors()) || []).map(error => {
+                        return this.node.createIssue(error);
+                    });
+                }
+            }
+        } else {
+            errors = this.node.errors();
+        }
+
         this.clearErrors();
         this.ep.setDisplay(false)
         if (!resourceRegistry.hasAsyncRequests() && errors&&errors.length>0){
