@@ -1001,7 +1001,7 @@ class TreeField extends UI.Panel implements UI.IField<any>{
                 var key=n.key();
                 var value=n.value();
 
-                if(typeof value === 'number') {
+                if(typeof value === 'number' || typeof value === 'boolean') {
                     value = "" + value;
                 }
                 
@@ -1012,9 +1012,14 @@ class TreeField extends UI.Panel implements UI.IField<any>{
                     value=value.substring(0,20)+"...";
                 }
 
-                if (!key && value) {
-                    key = value;
-                    value = "";
+                if (!key) {
+                    if(value) {
+                        key = value;
+                        value = "";
+                    } else {
+                        key = "-";
+                        value = "";
+                    }
                 }
 
                 var res=UI.label(key,UI.Icon.CIRCUIT_BOARD,UI.TextClasses.HIGHLIGHT);
@@ -1023,7 +1028,12 @@ class TreeField extends UI.Panel implements UI.IField<any>{
                 return result;
             }
         };
-        var viewer=UI.treeViewer((x:lowLevel.ILowLevelASTNode)=>x.children(),rend,x=>x.key());
+        
+        var getChildren = (x:lowLevel.ILowLevelASTNode) => {
+            return x.children();
+        }
+        
+        var viewer=UI.treeViewer(getChildren, rend, x => x.key());
         var inputV={
             children(){
                 return [input];
