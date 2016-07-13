@@ -12,6 +12,11 @@
     "gitUrl" : "https://github.com/dreamflyer/raml-suggestions.git",
     "installTypings" : true
   },
+  "raml-actions" : {
+    "build" : "npm run build",
+    "gitUrl" : "https://github.com/mulesoft/raml-actions.git",
+    "installTypings" : true
+  },
   "raml-1-parser" : {
     "build" : "npm run build",
     "test" : "gulp test",

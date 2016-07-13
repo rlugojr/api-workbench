@@ -1,5 +1,5 @@
 import editorTools=require("../editor-tools/editor-tools")
-import contextActions = require("../context-menu/contextActions")
+import contextActions = require("raml-actions")
 import commonContextActions = require("../context-menu/commonContextActions")
 import qc = require('./quick-commands');
 import dialogs=require("../dialogs/dialogs")
@@ -12,7 +12,7 @@ import services =rp.ds;
 
 import universeHelpers =rp.universeHelpers;
 
-class AddNewResourceStateCalculator extends commonContextActions.CommonASTStateCalculator {
+class AddNewResourceStateCalculator extends contextActions.CommonASTStateCalculator {
     calculate () : any {
 
         //usually we dont need to check the editor, CommonASTStateCalculator does this for us
@@ -25,7 +25,7 @@ class AddNewResourceStateCalculator extends commonContextActions.CommonASTStateC
         var generalState = this.getGeneralState()
         if (!generalState) return null;
 
-        var highLevelNode = <hl.IHighLevelNode>generalState.node;
+        var highLevelNode = <hl.IHighLevelNode><any>generalState.node;
 
         if (!universeHelpers.isResourceType(highLevelNode.definition()) &&
             !universeHelpers.isApiType(highLevelNode.definition()))
@@ -39,22 +39,7 @@ class AddNewResourceStateCalculator extends commonContextActions.CommonASTStateC
     }
 }
 
-class DeleteCurrentNodeStateCalculator extends commonContextActions.CommonASTStateCalculator {
-    calculate () : any {
-
-        var generalState = this.getGeneralState()
-        if (!generalState) return null
-
-        var highLevelNode = <hl.IHighLevelNode>generalState.node;
-
-        if (universeHelpers.isApiType(highLevelNode.definition()))
-            return null
-
-        return highLevelNode
-    }
-}
-
-class CreateNewAPIStateCalculator extends commonContextActions.CommonASTStateCalculator {
+class CreateNewAPIStateCalculator extends contextActions.CommonASTStateCalculator {
     calculate () : any {
 
         var generalState = this.getGeneralState()
@@ -71,13 +56,7 @@ class CreateNewAPIStateCalculator extends commonContextActions.CommonASTStateCal
         return {}
     }
 }
-function deleteNode(node: hl.IHighLevelNode) {
-    if (!node || !node.parent()) return false;
-    var parent = node.parent();
-    editorTools.aquireManager()._view.forEachViewer(x=> x.remove(node));
-    parent.remove(node);
-    editorTools.aquireManager().updateText(parent.lowLevel());
-}
+
 
 export function getResourceParent(node: hl.IHighLevelNode) {
     if (!node || !node.property()) return null;
@@ -137,15 +116,6 @@ export function registerQuickCommands(cm: qc.CommandManager) {
         category : ["Add new..."],
         onClick : state=>dialogs.newResource(editorTools.aquireManager().getSelectedNode()),
         stateCalculator : new AddNewResourceStateCalculator(),
-        shouldDisplay : state=>state != null
-    })
-
-    contextActions.addAction({
-        name : "Delete current node",
-        target : contextActions.TARGET_RAML_EDITOR_NODE,
-        category : ["Code"],
-        onClick : state=>deleteNode(editorTools.aquireManager().getSelectedNode()),
-        stateCalculator : new DeleteCurrentNodeStateCalculator(),
         shouldDisplay : state=>state != null
     })
 

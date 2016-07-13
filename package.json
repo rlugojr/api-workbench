@@ -69,7 +69,8 @@
     "xtend": "^4.0.1",
     "yaml-ast-parser": "0.0.28",
     "raml-1-parser": "0.2.25",
-    "raml-suggestions": "0.0.12"
+    "raml-suggestions": "0.0.12",
+    "raml-actions" : "0.0.1"
   },
   "devDependencies": {
     "coffee-loader": "^0.7.2",
