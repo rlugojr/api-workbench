@@ -353,9 +353,9 @@ export function newProject(){
    new NewProjectDialog().show()
 }
 
-export function moveResource(h:hl.IHighLevelNode){
-    new move.MoveElementsDialog(h, "Resource Type",true).show()
-}
+// export function moveResource(h:hl.IHighLevelNode){
+//     new move.MoveElementsDialog(h, "Resource Type",true).show()
+// }
 
 export function splitOnLines(text:string):string[]{
     var lines = text.match(/^.*((\r\n|\n|\r)|$)/gm);

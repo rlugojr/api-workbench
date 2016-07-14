@@ -14,6 +14,7 @@ import commandManager = require("./quick-commands/command-manager")
 import contextMenu = require("./context-menu/contextMenu")
 import commonContextActions = require("./context-menu/commonContextActions")
 import quickFixActions = require("./context-menu/quickFix")
+import actions = require("./context-menu/actions")
 
 
 module package_entry_point {
@@ -45,6 +46,7 @@ module package_entry_point {
 
                 quickCommands.registerCommands()
                 quickFixActions.initialize()
+                actions.register();
 
                 editorTools.initEditorTools()
             })

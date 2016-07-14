@@ -13,7 +13,7 @@ var universes=rp.universes
 
 import fs=require("fs")
 import details2=require("./details2")
-import contextActions = require("../context-menu/contextActions")
+import contextActions = require("raml-actions")
 import commonContextActions = require("../context-menu/commonContextActions")
 import editorTools=require("./editor-tools")
 import _=require("underscore")
