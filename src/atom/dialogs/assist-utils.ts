@@ -582,7 +582,7 @@ function renameInProperty(property : hl.IAttribute, contentToReplace : string, r
             }
         }
         return;
-    } else if (typeof oldPropertyValue ==="object") {
+    } else if (oldPropertyValue && (typeof oldPropertyValue ==="object")) {
         var structuredValue = <hl.IStructuredValue> oldPropertyValue;
 
         var oldPropertyStringValue = structuredValue.valueName();

@@ -273,9 +273,9 @@ export function createTree(p: hl.IParseResult, selectionListener: (e : UI.Select
             var selection = selectedTab.getSelection();
             if (selection && selection.elements && selection.elements.length > 0) {
                 selectionListener(new UI.SelectionChangedEvent(selectedTab, null, selection));
-
-                selectedTab.customizePanel(true);
             }
+
+            selectedTab.customizePanel(true);
         }
     })
     return folder;

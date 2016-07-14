@@ -89,6 +89,20 @@
         'name': 'string.single-quoted.yaml'
      'end': '$'
      'name': 'meta.key-value'
+     'patterns': [
+           {
+             'begin': '#'
+             'beginCaptures':
+               '0':
+                 'name': 'punctuation.definition.comment.yaml'
+             'end': '\\Z|\\n'
+             'name': 'comment.line.number-sign.yaml'
+           }
+
+           {
+             'include': '#scalars'
+           }
+         ]
   }
   {
     'begin': '^\\s*(baseUri)(:)'
