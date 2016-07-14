@@ -17,41 +17,7 @@ export type CommonASTStateCalculator = actions.CommonASTStateCalculator;
 function initializeActionSupport() {
 
     actions.intializeStandardActions();
-
-    var editorContextMenuContributor : actions.IContextMenuContributor = {
-
-        id : "editorContextActionContributor",
-
-
-        calculateItems : function () {
-            var currentActions = actions.calculateCurrentActions(
-                actions.TARGET_RAML_EDITOR_NODE)
-
-            if (!currentActions) return []
-
-            var result : actions.IContextMenuItem[] = []
-
-            currentActions.forEach(action => {
-                result.push({
-
-                    selector : 'atom-text-editor[data-grammar="source raml"],.raml-outline',
-
-                    name : action.label ? action.label : action.name,
-
-                    categories : action.category,
-
-                    onClick: action.onClick,
-
-                    children: []
-                })
-            })
-
-            return result
-        }
-
-    }
-
-    actions.registerContributor(editorContextMenuContributor)
+    actions.initializeActionBasedMenu('atom-text-editor[data-grammar="source raml"],.raml-outline');
 
     var editorCommandContributor : commandManager.ICommandContributor = {
         id : "editorContextActionContributor",
