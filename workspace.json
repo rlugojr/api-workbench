@@ -6,6 +6,12 @@
     "gitBranch" : false,
     "installTypings" : true
   },
+  "raml-actions" : {
+    "build" : "npm run build",
+    "test" : "npm run test",
+    "gitUrl" : "https://github.com/mulesoft/raml-actions.git",
+    "installTypings" : true
+  },
   "raml-suggestions" : {
     "build" : "npm run build",
     "test" : "npm run test-cov",
