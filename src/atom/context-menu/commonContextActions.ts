@@ -3,7 +3,7 @@
 import _ = require("underscore")
 import contextMenu = require("./contextMenu")
 import commandManager = require("../quick-commands/command-manager")
-import actions = require("raml-actions")
+import contextActions = require("raml-actions")
 import path = require ('path')
 import provider=require("../suggestion/provider")
 import rp=require("raml-1-parser");
@@ -12,26 +12,26 @@ import hl=rp.hl;
 import ll=rp.ll;
 import editorTools = require("../editor-tools/editor-tools")
 
-export type CommonASTStateCalculator = actions.CommonASTStateCalculator;
+export type CommonASTStateCalculator = contextActions.CommonASTStateCalculator;
 
 function initializeActionSupport() {
 
-    actions.intializeStandardActions();
-    actions.initializeActionBasedMenu('atom-text-editor[data-grammar="source raml"],.raml-outline');
+    contextActions.intializeStandardActions();
+    contextActions.initializeActionBasedMenu('atom-text-editor[data-grammar="source raml"],.raml-outline');
 
     var editorCommandContributor : commandManager.ICommandContributor = {
         id : "editorContextActionContributor",
 
 
         calculateItems : function () {
-            var actions = actions.calculateCurrentActions(
-                actions.TARGET_RAML_EDITOR_NODE)
+            var currentActions = contextActions.calculateCurrentActions(
+                contextActions.TARGET_RAML_EDITOR_NODE)
 
-            if (!actions) return []
+            if (!currentActions) return []
 
             var result : commandManager.ICommand[] = []
 
-            actions.forEach(action => {
+            currentActions.forEach(action => {
                 result.push({
 
                     selector : 'atom-text-editor[data-grammar="source raml"],.raml-outline',
@@ -67,7 +67,7 @@ export function initialize() {
         }
     }
 
-    actions.setEditorProvider(editorProvider);
+    contextActions.setEditorProvider(editorProvider);
 
     var astProvider = {
             getASTRoot() : hl.IHighLevelNode {
@@ -120,7 +120,7 @@ export function initialize() {
             }
     }
 
-    actions.setASTProvider(<any>astProvider);
+    contextActions.setASTProvider(<any>astProvider);
 
     var astModifier = {
         deleteNode(node: hl.IParseResult) {
@@ -143,7 +143,7 @@ export function initialize() {
         }
     }
 
-    actions.setASTModifier(<any>astModifier);
+    contextActions.setASTModifier(<any>astModifier);
 
     initializeActionSupport();
 }
