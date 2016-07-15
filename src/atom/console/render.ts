@@ -1658,8 +1658,8 @@ class Markup extends PureComponent<{ content: string; mime?: string; setState: S
   render () {
     var grammar = atomUtil.getGrammerFromMime(this.props.mime)
     var content = this.props.content
-    var isXml = grammar.fileTypes.indexOf('xml') > -1
-    var isJson = grammar.fileTypes.indexOf('json') > -1
+    var isXml = grammar.fileTypes.indexOf('xml') > -1 || isXML(content);
+    var isJson = grammar.fileTypes.indexOf('json') > -1 || isJSON(content);
     var isCss = grammar.fileTypes.indexOf('css') > -1
     var canPrettify = isXml || isJson || isCss
 
@@ -1928,4 +1928,32 @@ function getNodeLabel (node: highLevelAst.IAttribute | highLevelAst.IHighLevelNo
   }
 
   return name
+}
+
+function isXML(content: any): boolean {
+  if(typeof content !== 'string') {
+    return false;
+  }
+
+  var trimmed: string = content.trim();
+
+  if(trimmed.length < 1) {
+    return false;
+  }
+
+  if(trimmed.charAt(0) === "<" && trimmed.charAt(trimmed.length -1) === ">") {
+    return true;
+  }
+
+  return false;
+}
+
+function isJSON(content: any): boolean {
+  try {
+    JSON.parse(content);
+
+    return true;
+  } catch(exception) {
+    return false;
+  }
 }
