@@ -881,10 +881,6 @@ class ParametersBlock extends PureComponent<{
       parts.push('required')
     }
 
-    if (param.repeat()) {
-      parts.push('repeat')
-    }
-
     return parts.join(', ')
   }
 
