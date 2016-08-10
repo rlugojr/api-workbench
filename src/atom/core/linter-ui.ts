@@ -180,7 +180,23 @@ function actualLint(textEditor:AtomCore.IEditor) {
             console.log("Linting took:" + (l1 - l))
         }
     }
-    return rs.filter(x=>x);
+    
+    var warnings = 0;
+    
+    return rs.filter(x => {
+        return x;
+    })
+        .filter(x => {
+        if(x.type === "Warning") {
+            if(warnings >= 20) {
+                return false;
+            }
+            
+            warnings++;
+        }
+        
+        return x;
+    });
 }
 class Acceptor implements hl.ValidationAcceptor{
 
