@@ -96,7 +96,7 @@ class FSProvider implements suggestions.IFSProvider {
     }
 }
 
-class AtomEditorState implements suggestions.IEditorState {
+class AtomEditorState implements suggestions.IEditorStateProvider {
     textEditor: AtomCore.IEditor;
 
     constructor(textEditor: AtomCore.IEditor,private request: AtomCompletionRequest) {
