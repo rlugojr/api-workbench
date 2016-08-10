@@ -67,7 +67,7 @@ export function onDidInsertSuggestion(event:{editor:AtomCore.IEditor; triggerPos
 
 
 class FSProvider implements suggestions.IFSProvider {
-    contentDirName(content: suggestions.IEditorState): string {
+    contentDirName(content: suggestions.IEditorStateProvider): string {
         var contentPath = content.getPath();
 
         return path.dirname(contentPath);
