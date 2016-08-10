@@ -66,8 +66,8 @@ export function onDidInsertSuggestion(event:{editor:AtomCore.IEditor; triggerPos
 }
 
 
-class ContentProvider implements suggestions.ICompletionContentProvider {
-    contentDirName(content: suggestions.IContent): string {
+class FSProvider implements suggestions.IFSProvider {
+    contentDirName(content: suggestions.IEditorState): string {
         var contentPath = content.getPath();
 
         return path.dirname(contentPath);
@@ -96,10 +96,10 @@ class ContentProvider implements suggestions.ICompletionContentProvider {
     }
 }
 
-class AtomEditorContent implements suggestions.IContent {
+class AtomEditorState implements suggestions.IEditorState {
     textEditor: AtomCore.IEditor;
 
-    constructor(textEditor: AtomCore.IEditor) {
+    constructor(textEditor: AtomCore.IEditor,private request: AtomCompletionRequest) {
         this.textEditor = textEditor;
     }
 
@@ -114,30 +114,19 @@ class AtomEditorContent implements suggestions.IContent {
     getBaseName(): string {
         return path.basename(this.getPath());
     }
-}
-
-class AtomPosition implements suggestions.IPosition {
-    constructor(private request: AtomCompletionRequest) {
-
-    }
 
     getOffset(): number {
         return this.request.editor.getBuffer().characterIndexForPosition(this.request.bufferPosition);
     }
 }
 
-
-
 export function getSuggestions(request: AtomCompletionRequest): suggestions.Suggestion[] {
     var t0=new Date().getMilliseconds();
     try {
-        var atomContent: AtomEditorContent = new AtomEditorContent(request.editor);
+        var editorState = new AtomEditorState(request.editor, request);
 
-        var atomPosition: AtomPosition = new AtomPosition(request);
+        return suggestions.suggest(editorState, new FSProvider());
 
-        var suggestionsProvider: suggestions.CompletionProvider = new suggestions.CompletionProvider(new ContentProvider());
-
-        return suggestionsProvider.suggest(new suggestions.CompletionRequest(atomContent, atomPosition));
     }finally{
         if (editorTools.aquireManager()){
             var m=editorTools.aquireManager();
