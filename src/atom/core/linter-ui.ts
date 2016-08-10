@@ -192,10 +192,16 @@ class Acceptor implements hl.ValidationAcceptor{
     begin() {
     }
 
-    accept(issue:hl.ValidationIssue) {
-        if (!issue){
+    accept(_issue:hl.ValidationIssue) {
+        if (!_issue){
             return;
         }
+        var issue:hl.ValidationIssue = _issue;
+        if(_issue.extras && _issue.extras.length>0){
+            issue = _issue.extras[0];
+            var traceIssue = _issue;
+        }
+        
         var p1=this.editor.getBuffer().positionForCharacterIndex(issue.start);
         var p2=this.editor.getBuffer().positionForCharacterIndex(issue.end);
         var t=issue.message;
@@ -209,8 +215,9 @@ class Acceptor implements hl.ValidationAcceptor{
             trace:[],
             range:[[p1.row,p1.column], [p2.row,p2.column]]}
         this.errors.push(message);
-        if (issue.extras) {
-            issue.extras.forEach(x=> {
+        if (traceIssue) {
+            {
+                var x = traceIssue;
                 var t = x.message;
                 var buf=this.editor.getBuffer();
                 var ps=x.path;
@@ -237,7 +244,7 @@ class Acceptor implements hl.ValidationAcceptor{
                     range: [[p1.row, p1.column], [p2.row, p2.column]]
                 }
                 message.trace.push(trace);
-            })
+            }
         }
     }
 
