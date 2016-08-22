@@ -10,9 +10,9 @@ import quickOutline=require("./quick-outline/quick-outline")
 import decl=require("./dialogs/assist-utils")
 import linterUI=require("./core/linter-ui")
 var CompositeDisposable = require('atom').CompositeDisposable;
+import sharedASTInitializer = require("./shared-ast-initializer")
 import commandManager = require("./quick-commands/command-manager")
 import contextMenu = require("./context-menu/contextMenu")
-import commonContextActions = require("./context-menu/commonContextActions")
 import quickFixActions = require("./context-menu/quickFix")
 import actions = require("./context-menu/actions")
 
@@ -42,7 +42,7 @@ module package_entry_point {
 
                 commandManager.initialize()
                 contextMenu.initialize()
-                commonContextActions.initialize()
+                sharedASTInitializer.initialize()
 
                 quickCommands.registerCommands()
                 quickFixActions.initialize()

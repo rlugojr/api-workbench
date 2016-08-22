@@ -1,0 +1,105 @@
+/// <reference path="../../typings/main.d.ts" />
+
+import editorTools = require("./editor-tools/editor-tools")
+import sharedAstInitializerInterfaces = require("./shared-ast-initializer-interfaces")
+import commonContextActions = require("./context-menu/commonContextActions")
+import provider=require("./suggestion/provider")
+
+import path = require ('path')
+
+import rp=require("raml-1-parser");
+import hl=rp.hl;
+import ll=rp.ll;
+
+export function initialize() {
+    var editorProvider = {
+        getCurrentEditor() {
+            var gotEditorFromOutline = false;
+
+            var editor = null;
+
+            if (atom.workspace.getActiveTextEditor()) {
+                editor = atom.workspace.getActiveTextEditor()
+            } else if (editorTools.aquireManager()) {
+                editor = <AtomCore.IEditor>editorTools.aquireManager().getCurrentEditor()
+                gotEditorFromOutline = true
+            }
+
+            return editor;
+        }
+    }
+
+    var astProvider = {
+        getASTRoot() : hl.IHighLevelNode {
+            return this.getSelectedNode().root();
+        },
+
+        getSelectedNode() : hl.IParseResult {
+
+            var editor = null;
+            var gotEditorFromOutline = false;
+
+            if (editorTools.aquireManager()) {
+                editor = <AtomCore.IEditor>editorTools.aquireManager().getCurrentEditor()
+                gotEditorFromOutline = true
+            }
+
+            if (!editor && atom.workspace.getActiveTextEditor()) {
+                editor = atom.workspace.getActiveTextEditor()
+            }
+
+            if (!editor) return null
+
+            if (path.extname(editor.getPath()) != '.raml') return null
+
+            var request = {
+                editor: editor,
+                bufferPosition: editor.getCursorBufferPosition()
+            };
+
+            var node = null;
+
+            if (gotEditorFromOutline) {
+                node = editorTools.aquireManager().getSelectedNode()
+            } else {
+                if (editor.getBuffer()) {
+                    var lastPosition = editor.getBuffer().getEndPosition();
+                    if (lastPosition.column == request.bufferPosition.column
+                        && lastPosition.row == request.bufferPosition.row) {
+                        return null;
+                    }
+                    if (request.bufferPosition.row == 0 && request.bufferPosition.column == 0) {
+                        return null;
+                    }
+                }
+
+                node = provider.getAstNode(request, false);
+            }
+
+            return node;
+        }
+    }
+    
+    var astModifier = {
+        deleteNode(node: hl.IParseResult) {
+            var editorManager = editorTools.aquireManager();
+            if (editorManager && editorManager._view) {
+                editorManager._view.forEachViewer(x=> x.remove(node));
+            }
+
+            var parent = node.parent();
+            if (parent) {
+                parent.remove(<any>node);
+                parent.resetChildren();
+            }
+        },
+        updateText(node: ll.ILowLevelASTNode) {
+            var editorManager = editorTools.aquireManager();
+            if (editorManager) {
+                editorManager.updateText(node);
+            }
+        }
+    }
+
+    commonContextActions.initialize(editorProvider, astProvider, astModifier);
+}
