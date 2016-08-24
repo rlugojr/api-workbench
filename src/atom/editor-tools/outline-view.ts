@@ -29,7 +29,7 @@ export class RamlOutline extends SC.Scrollable {
         this._rs = createTree(p, sender => {
             if(editorTools.aquireManager()._details && sender.selection && sender.selection.elements && this.fire == true){
                 if (sender.selection.elements.length>0&&sender.selection.elements[0]) {
-                    editorTools.aquireManager().setSelectedNode(sender.selection.elements[0]);
+                    editorTools.aquireManager().setSelectedNode(sender.selection.elements[0].getSource());
                 }
             }
         });
@@ -153,16 +153,13 @@ enum HLNodeType {
     Unknown
 }
 
-// function getNodeType(node: hl.IHighLevelNode): HLNodeType {
-//     if (isResource(node)) return HLNodeType.Resource;
-//     else if (isOther(node)) return HLNodeType.Trait;
-//     else if (isResourceTypeOrTrait(node)) return HLNodeType.Type;
-//     else if (isSchemaOrType(node)) return HLNodeType.Schema;
-//     else return HLNodeType.Unknown;
-// }
-
-
-
+function getNodeType(node: hl.IHighLevelNode): HLNodeType {
+    if (outlineCommon.isResource(node)) return HLNodeType.Resource;
+    else if (outlineCommon.isOther(node)) return HLNodeType.Trait;
+    else if (outlineCommon.isResourceTypeOrTrait(node)) return HLNodeType.Type;
+    else if (outlineCommon.isSchemaOrType(node)) return HLNodeType.Schema;
+    else return HLNodeType.Unknown;
+}
 
 function isApi(p: hl.IHighLevelNode) {
     var pc=p.definition().key();
@@ -173,18 +170,26 @@ function isDocumentation(p: hl.IHighLevelNode) {
     return ( pc=== universes.Universe08.DocumentationItem||pc===universes.Universe10.DocumentationItem);
 }
 
+function fullStructurePath(model: ramlOutline.StructureNode) {
+    if (!model) return "";
 
-function fullPath(node: hl.IHighLevelNode) {
+    var node = model.getSource();
+    return fullPath(<any>node);
+}
+
+function fullPath(node: hl.IParseResult) {
     if (node == null) return "";
     else return fullPath(node.parent()) + "/" + node.name();
 }
-export function simpleTree(input: ramlOutline.StructureNode, selectionListener: UI.ISelectionListener<any>, categoryName:string,
+
+function simpleTree(input: ramlOutline.StructureNode, selectionListener: UI.ISelectionListener<any>, categoryName:string,
                            opener: (x:ramlOutline.StructureNode)=>void=null) {
-    var viewer = UI.treeViewer(x=>{
-        return x.children;
-    }, new HLRenderer(opener), fullPath);
-    viewer.setBasicLabelFunction(x=>x.name());
-    viewer.setKeyProvider({ key: outlineCommon.keyProvider });
+    var viewer = UI.treeViewer<ramlOutline.StructureNode>((x:ramlOutline.StructureNode)=>{
+        return <ramlOutline.StructureNode[]>x.children;
+    }, new HLRenderer(opener), fullStructurePath);
+
+    viewer.setBasicLabelFunction(x=>x.text);
+    viewer.setKeyProvider({ key: (x:ramlOutline.StructureNode)=>{return x.key} });
     viewer.addSelectionListener(selectionListener);
 
     viewer.getBinding().set(input);
@@ -194,10 +199,15 @@ export function simpleTree(input: ramlOutline.StructureNode, selectionListener: 
 
 export function createTree(p: hl.IParseResult, selectionListener: (e : UI.SelectionChangedEvent<any>) => void, opener: (x: ramlOutline.StructureNode) => void = null) {
 
-    var outline = simpleTree(p, { selectionChanged: selectionListener }, outlineCommon.ResourcesCategory, opener);
-    var schemas = simpleTree(p, { selectionChanged: selectionListener }, outlineCommon.SchemasAndTypesCategory, opener);
-    var types   = simpleTree(p, { selectionChanged: selectionListener }, outlineCommon.ResourceTypesAndTraitsCategory, opener);
-    var other  = simpleTree(p, { selectionChanged: selectionListener }, outlineCommon.OtherCategory, opener);
+    var resourcesModel = ramlOutline.getStructure(outlineCommon.ResourcesCategory);
+    var typesModel = ramlOutline.getStructure(outlineCommon.SchemasAndTypesCategory);
+    var traitsModel = ramlOutline.getStructure(outlineCommon.ResourceTypesAndTraitsCategory);
+    var otherModel = ramlOutline.getStructure(outlineCommon.OtherCategory);
+
+    var outline = simpleTree(resourcesModel, { selectionChanged: selectionListener }, outlineCommon.ResourcesCategory, opener);
+    var schemas = simpleTree(typesModel, { selectionChanged: selectionListener }, outlineCommon.SchemasAndTypesCategory, opener);
+    var types   = simpleTree(traitsModel, { selectionChanged: selectionListener }, outlineCommon.ResourceTypesAndTraitsCategory, opener);
+    var other  = simpleTree(otherModel, { selectionChanged: selectionListener }, outlineCommon.OtherCategory, opener);
 
     var folder = new UI.TabFolder();
 
@@ -205,7 +215,9 @@ export function createTree(p: hl.IParseResult, selectionListener: (e : UI.Select
     folder.add(outlineCommon.SchemasAndTypesCategory, UI.Icon.SEARCH, schemas, 'raml-icon-custom');
     folder.add(outlineCommon.ResourceTypesAndTraitsCategory, UI.Icon.SEARCH, types, 'raml-icon-custom');
     folder.add(outlineCommon.OtherCategory, UI.Icon.SEARCH, other, 'raml-icon-custom');
+
     folder.setSelectedIndex(0)
+
     folder.setOnSelected(()=>{
         var selectedTab = <UI.TreeViewer<hl.IParseResult, hl.IParseResult>> folder.selectedComponent();
         if (selectedTab) {
@@ -221,105 +233,70 @@ export function createTree(p: hl.IParseResult, selectionListener: (e : UI.Select
 }
 
 
-export class HLRenderer implements UI.ICellRenderer<hl.IParseResult>{
+export class HLRenderer implements UI.ICellRenderer<ramlOutline.StructureNode>{
 
-    constructor(private opener: (x: hl.IParseResult) => void) {
+    constructor(private opener: (x: ramlOutline.StructureNode) => void) {
 
     }
 
     private iconNameToIconEnum(iconName : string) : UI.Icon {
-        switch(iconName) {
-            case: 
-        }
+        if (!iconName) return null;
+
+        return UI.Icon[iconName];
     }
 
     private textHighlightNameToTextClass(highlightName : string) : UI.TextClasses {
+        if (!highlightName) return null;
 
+        return UI.TextClasses[highlightName];
     }
 
     render(model: ramlOutline.StructureNode): UI.BasicComponent<any> {
         try {
 
-            if (model.isAttr()) {
-                var attr = <hl.IAttribute>model;
-                return UI.hc(UI.label(attr.name() + ":" + attr.value()), UI.a("", x=> {
-                    var p1 = editorTools.aquireManager().getCurrentEditor().getBuffer().positionForCharacterIndex(model.lowLevel().start());
-                    var p2 = editorTools.aquireManager().getCurrentEditor().getBuffer().positionForCharacterIndex(model.lowLevel().end());
+            if (ramlOutline.isTypedStructureNode(model)
+                && (<ramlOutline.TypedStructureNode>model).type
+                && (<ramlOutline.TypedStructureNode>model).type == ramlOutline.NodeType.ATTRIBUTE) {
+
+                var attr = <hl.IAttribute>(<any>model.getSource());
+
+                //TODO check if we really need custom selection here, otherwise the whole "is attribute" condition is redundant
+                return UI.hc(UI.label(model.text), UI.a("", x=> {
+                    var p1 = editorTools.aquireManager().getCurrentEditor().
+                        getBuffer().positionForCharacterIndex(attr.lowLevel().start());
+                    var p2 = editorTools.aquireManager().getCurrentEditor().
+                        getBuffer().positionForCharacterIndex(attr.lowLevel().end());
                     editorTools.aquireManager().getCurrentEditor().setSelectedBufferRange({ start: p1, end: p1 }, {});
 
                 }, UI.Icon.ARROW_SMALL_LEFT, null, null));
 
             }
-            if (model.isUnknown()) {
-                return UI.label("unknown");
-            }
+
             var icon = UI.Icon.DASH;
             var highLight = UI.TextClasses.NORMAL;
-            var node = <hl.IHighLevelNode>model;
-            var pc=node.definition().key();
-            if (pc === universes.Universe08.Resource||pc===universes.Universe10.Resource) {
-                icon = UI.Icon.PRIMITIVE_SQUARE;
-                highLight = UI.TextClasses.HIGHLIGHT;
+
+            if (this.iconNameToIconEnum(model.icon)) {
+                icon = this.iconNameToIconEnum(model.icon);
             }
-            if (pc === universes.Universe08.Method||pc===universes.Universe10.Method) {
-                icon = UI.Icon.PRIMITIVE_DOT
-                highLight = UI.TextClasses.WARNING;
+
+            if (this.textHighlightNameToTextClass(model.textStyle)) {
+                highLight = this.textHighlightNameToTextClass(model.textStyle);
             }
-            if (pc === universes.Universe08.AbstractSecurityScheme||pc===universes.Universe10.AbstractSecurityScheme) {
-                icon = UI.Icon.LOCK;
-                highLight = UI.TextClasses.HIGHLIGHT;
-            }
-            if (pc === universes.Universe08.AbstractSecurityScheme||pc==universes.Universe10.AbstractSecurityScheme) {
-                icon = UI.Icon.FILE_SUBMODULE;
-                highLight = UI.TextClasses.NORMAL;
-            }
-            if (pc==universes.Universe10.TypeDeclaration && universeHelpers.isAnnotationTypesProperty(node.property())) {
-                icon = UI.Icon.TAG;
-                highLight = UI.TextClasses.HIGHLIGHT;
-            }
-            if (node.definition().isAssignableFrom(universes.Universe10.TypeDeclaration.name)||
-                node.definition().isAssignableFrom(universes.Universe08.Parameter.name)) {
-                if (node.property()&&node.property().nameId()==universes.Universe10.ObjectTypeDeclaration.properties.properties.name){
-                    icon = UI.Icon.FILE_BINARY;
-                    highLight = UI.TextClasses.SUCCESS;
-                }
-                else {
-                    icon = UI.Icon.FILE_BINARY
-                    highLight = UI.TextClasses.SUCCESS;
-                }
-            }
-            var nm=model.name();
-            var hnode=(<hl.IHighLevelNode>model);
-            if (pc===universes.Universe08.DocumentationItem||pc===universes.Universe10.DocumentationItem){
-                icon = UI.Icon.BOOK
-                var a=hnode.attr("title");
-                if (a){
-                    nm=a.value();
-                }
-            }
+
             var extraText="";
             var extraClass=UI.TextClasses.NORMAL;
 
-            var hc=UI.hc(UI.label(nm, icon, highLight))
-            var tp=node.attr("type");
-            if (tp){
-                var vl=tp.value();
-                if (vl==null){
-                    vl="";
-                }
-                var sv="";
-                if (typeof vl ==="object"){
-                    sv=":"+(<hl.IStructuredValue>vl).valueName();
-                }
-                else{
-                    sv=":"+vl;
-                }
-                hc.addChild(UI.label(sv, UI.Icon.NONE, UI.TextClasses.WARNING).margin(2,0,0,0));
+            var hc=UI.hc(UI.label(model.text, icon, highLight))
+
+            if (model.typeText){
+                hc.addChild(UI.label(model.typeText, UI.Icon.NONE, UI.TextClasses.WARNING).margin(2,0,0,0));
             }
-            if (node.lowLevel().unit()!=node.root().lowLevel().unit()){
+
+            if (model.getSource().lowLevel().unit()!=model.getSource().root().lowLevel().unit()){
                 highLight=UI.TextClasses.SUBTLE;
-                hc.addChild(UI.label("("+node.lowLevel().unit().path()+")",UI.Icon.NONE,highLight).margin(5,0,0,0));
+                hc.addChild(UI.label("("+model.getSource().lowLevel().unit().path()+")",UI.Icon.NONE,highLight).margin(5,0,0,0));
             }
+
             hc.addClass("outline");
             return hc;
         } catch (e) {

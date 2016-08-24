@@ -4,12 +4,12 @@ import editorTools = require("./editor-tools/editor-tools")
 import sharedAstInitializerInterfaces = require("./shared-ast-initializer-interfaces")
 import commonContextActions = require("./context-menu/commonContextActions")
 import provider=require("./suggestion/provider")
-
+import outlineInitializer = require("./editor-tools/outline-initializer")
 import path = require ('path')
 
-import rp=require("raml-1-parser");
-import hl=rp.hl;
-import ll=rp.ll;
+import parser=require("raml-1-parser");
+import hl=parser.hl;
+import ll=parser.ll;
 
 export function initialize() {
     var editorProvider = {
@@ -31,7 +31,30 @@ export function initialize() {
 
     var astProvider = {
         getASTRoot() : hl.IHighLevelNode {
-            return this.getSelectedNode().root();
+            var selectedNode = this.getSelectedNode();
+            if (selectedNode) return selectedNode.root();
+
+            var editor = null;
+            if (editorTools.aquireManager()) {
+                editor = <AtomCore.IEditor>editorTools.aquireManager().getCurrentEditor()
+            }
+
+            if (!editor && atom.workspace.getActiveTextEditor()) {
+                editor = atom.workspace.getActiveTextEditor()
+            }
+
+            if (!editor) return null
+
+            var filePath = editor.getPath();
+
+            var prj=parser.project.createProject(path.dirname(filePath));
+            var offset=editor.getBuffer().characterIndexForPosition(
+                editor.getCursorBufferPosition());
+            var text=editor.getBuffer().getText();
+
+            var unit=prj.setCachedUnitContent(path.basename(filePath),text);
+
+            return <hl.IHighLevelNode>unit.highLevel();
         },
 
         getSelectedNode() : hl.IParseResult {
@@ -102,4 +125,5 @@ export function initialize() {
     }
 
     commonContextActions.initialize(editorProvider, astProvider, astModifier);
+    outlineInitializer.initialize(editorProvider, astProvider);
 }
