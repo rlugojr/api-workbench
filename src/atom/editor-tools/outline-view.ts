@@ -199,10 +199,17 @@ function simpleTree(input: ramlOutline.StructureNode, selectionListener: UI.ISel
 
 export function createTree(p: hl.IParseResult, selectionListener: (e : UI.SelectionChangedEvent<any>) => void, opener: (x: ramlOutline.StructureNode) => void = null) {
 
-    var resourcesModel = p!=null?ramlOutline.getStructure(outlineCommon.ResourcesCategory):null;
-    var typesModel = p!=null?ramlOutline.getStructure(outlineCommon.SchemasAndTypesCategory):null;
-    var traitsModel = p!=null?ramlOutline.getStructure(outlineCommon.ResourceTypesAndTraitsCategory):null;
-    var otherModel = p!=null?ramlOutline.getStructure(outlineCommon.OtherCategory):null;
+    var subTrees = ramlOutline.getStructureForAllCategories();
+
+    var resourcesModel = (p!=null&&subTrees!=null)?subTrees[outlineCommon.ResourcesCategory]:null;
+    var typesModel = (p!=null&&subTrees!=null)?subTrees[outlineCommon.SchemasAndTypesCategory]:null;
+    var traitsModel = (p!=null&&subTrees!=null)?subTrees[outlineCommon.ResourceTypesAndTraitsCategory]:null;
+    var otherModel = (p!=null&&subTrees!=null)?subTrees[outlineCommon.OtherCategory]:null;
+
+    // var resourcesModel = p!=null?ramlOutline.getStructure(outlineCommon.ResourcesCategory):null;
+    // var typesModel = p!=null?ramlOutline.getStructure(outlineCommon.SchemasAndTypesCategory):null;
+    // var traitsModel = p!=null?ramlOutline.getStructure(outlineCommon.ResourceTypesAndTraitsCategory):null;
+    // var otherModel = p!=null?ramlOutline.getStructure(outlineCommon.OtherCategory):null;
 
     var outline = resourcesModel!=null? simpleTree(resourcesModel, { selectionChanged: selectionListener }, outlineCommon.ResourcesCategory, opener):null;
     var schemas = typesModel!=null? simpleTree(typesModel, { selectionChanged: selectionListener }, outlineCommon.SchemasAndTypesCategory, opener):null;
