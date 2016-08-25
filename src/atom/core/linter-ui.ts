@@ -5,6 +5,7 @@ import path = require ('path')
 import rp=require("raml-1-parser")
 import hl=rp.hl;
 import rr=rp.utils;
+import unitUtils = require("../util/unit")
 
 import _=require("underscore")
 var TextBuffer=require("basarat-text-buffer")
@@ -102,7 +103,7 @@ export function lint(textEditor:AtomCore.IEditor) {
 function isRAMLUnit(editor) {
     var contents = editor.getBuffer().getText();
 
-    return contents.match(/^\s*#%RAML\s+(\d\.\d)\s*(\w*)\s*$/m);
+    return unitUtils.isRAMLUnit(contents)
 }
 
 function actualLint(textEditor:AtomCore.IEditor) {

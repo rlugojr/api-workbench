@@ -199,15 +199,15 @@ function simpleTree(input: ramlOutline.StructureNode, selectionListener: UI.ISel
 
 export function createTree(p: hl.IParseResult, selectionListener: (e : UI.SelectionChangedEvent<any>) => void, opener: (x: ramlOutline.StructureNode) => void = null) {
 
-    var resourcesModel = ramlOutline.getStructure(outlineCommon.ResourcesCategory);
-    var typesModel = ramlOutline.getStructure(outlineCommon.SchemasAndTypesCategory);
-    var traitsModel = ramlOutline.getStructure(outlineCommon.ResourceTypesAndTraitsCategory);
-    var otherModel = ramlOutline.getStructure(outlineCommon.OtherCategory);
+    var resourcesModel = p!=null?ramlOutline.getStructure(outlineCommon.ResourcesCategory):null;
+    var typesModel = p!=null?ramlOutline.getStructure(outlineCommon.SchemasAndTypesCategory):null;
+    var traitsModel = p!=null?ramlOutline.getStructure(outlineCommon.ResourceTypesAndTraitsCategory):null;
+    var otherModel = p!=null?ramlOutline.getStructure(outlineCommon.OtherCategory):null;
 
-    var outline = simpleTree(resourcesModel, { selectionChanged: selectionListener }, outlineCommon.ResourcesCategory, opener);
-    var schemas = simpleTree(typesModel, { selectionChanged: selectionListener }, outlineCommon.SchemasAndTypesCategory, opener);
-    var types   = simpleTree(traitsModel, { selectionChanged: selectionListener }, outlineCommon.ResourceTypesAndTraitsCategory, opener);
-    var other  = simpleTree(otherModel, { selectionChanged: selectionListener }, outlineCommon.OtherCategory, opener);
+    var outline = resourcesModel!=null? simpleTree(resourcesModel, { selectionChanged: selectionListener }, outlineCommon.ResourcesCategory, opener):null;
+    var schemas = typesModel!=null? simpleTree(typesModel, { selectionChanged: selectionListener }, outlineCommon.SchemasAndTypesCategory, opener):null;
+    var types   = traitsModel!=null? simpleTree(traitsModel, { selectionChanged: selectionListener }, outlineCommon.ResourceTypesAndTraitsCategory, opener):null;
+    var other  = otherModel!=null? simpleTree(otherModel, { selectionChanged: selectionListener }, outlineCommon.OtherCategory, opener):null;
 
     var folder = new UI.TabFolder();
 

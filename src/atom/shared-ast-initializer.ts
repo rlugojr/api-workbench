@@ -6,6 +6,7 @@ import commonContextActions = require("./context-menu/commonContextActions")
 import provider=require("./suggestion/provider")
 import outlineInitializer = require("./editor-tools/outline-initializer")
 import path = require ('path')
+import unitUtils = require("./util/unit")
 
 import parser=require("raml-1-parser");
 import hl=parser.hl;
@@ -44,6 +45,7 @@ export function initialize() {
             }
 
             if (!editor) return null
+            if (!unitUtils.isRAMLUnit(editor.getBuffer().getText())) return null;
 
             var filePath = editor.getPath();
 
@@ -74,6 +76,7 @@ export function initialize() {
             if (!editor) return null
 
             if (path.extname(editor.getPath()) != '.raml') return null
+            if (!unitUtils.isRAMLUnit(editor.getBuffer().getText())) return null;
 
             var request = {
                 editor: editor,
