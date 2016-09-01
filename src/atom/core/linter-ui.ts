@@ -105,6 +105,35 @@ function isRAMLUnit(editor) {
     return contents.match(/^\s*#%RAML\s+(\d\.\d)\s*(\w*)\s*$/m);
 }
 
+var combErrors = function (result:any[]) {
+    var map = {};
+    result.forEach(x=> {
+        var original = JSON.parse(JSON.stringify(x));
+        original.trace = null;
+        var newKey = JSON.stringify(original);
+        var tr = map[newKey];
+        if (tr) {
+            tr.push(x);
+        }
+        else {
+            map[newKey] = [x];
+        }
+    });
+    var rs:any[] = [];
+    for (var i in map) {
+        var mes = JSON.parse(i);
+        mes.trace = [];
+        var ms = map[i];
+        ms.forEach(x=> {
+            if (x.trace) {
+                mes.trace = mes.trace.concat(x.trace);
+            }
+        })
+        mes.trace = combErrors(mes.trace);
+        rs.push(mes);
+    }
+    return rs;
+};
 function actualLint(textEditor:AtomCore.IEditor) {
     execLinterCallback(textEditor);
 
@@ -150,31 +179,7 @@ function actualLint(textEditor:AtomCore.IEditor) {
     gatherValidationErrors(astNode,result,textEditor);
 
     var l1=new Date().getTime();
-    var map={};
-    result.forEach(x=>{
-        var original=JSON.parse(JSON.stringify(x));
-        original.trace=null;
-        var newKey=JSON.stringify(original);
-        var tr=map[newKey];
-        if (tr){
-            tr.push(x);
-        }
-        else{
-            map[newKey]=[x];
-        }
-    });
-    var rs:any[]=[];
-    for (var i in map){
-        var mes=JSON.parse(i);
-        mes.trace=[];
-        var ms=map[i];
-        ms.forEach(x=>{
-            if (x.trace){
-                mes.trace=mes.trace.concat(x.trace);
-            }
-        })
-        rs.push(mes);
-    }
+    var rs = combErrors(result);
     if (editorTools.aquireManager()) {
         if (editorTools.aquireManager().performanceDebug) {
             console.log("Linting took:" + (l1 - l))
@@ -213,55 +218,57 @@ class Acceptor implements hl.ValidationAcceptor{
             return;
         }
         var issue:hl.ValidationIssue = _issue;
-        if(_issue.extras && _issue.extras.length>0){
-            issue = _issue.extras[0];
-            var traceIssue = _issue;
+        var issueType = issue.isWarning?"Warning":'Error';
+        var issuesArray:hl.ValidationIssue[] = [];
+        while(issue){
+            issuesArray.push(issue);
+            if(issue.extras && issue.extras.length>0){
+                issue = issue.extras[0];
+            }
+            else{
+                issue = null;
+            }
+        }        
+        var issues = issuesArray.reverse().map(x=>{
+            var result = this.convertParserIssue(x,issueType);
+            issueType = "Trace";
+            return result;
+        });
+        for(var i = 0 ; i < issues.length-1; i++){
+            issues[0].trace.push(issues[i+1]);
         }
-        
-        var p1=this.editor.getBuffer().positionForCharacterIndex(issue.start);
-        var p2=this.editor.getBuffer().positionForCharacterIndex(issue.end);
-        var t=issue.message;
-        var pos=t.lastIndexOf(" at line ");
-        if (pos!=-1){
-            t=t.substring(0,pos);//it is message from yaml lets cut line info
-        }
-        var message = {type: (issue.isWarning?"Warning":'Error'),
-            filePath:issue.path?issue.path:this.editor.getPath(),
-            text: t,
-            trace:[],
-            range:[[p1.row,p1.column], [p2.row,p2.column]]}
+        var message = issues[0];
         this.errors.push(message);
-        if (traceIssue) {
-            {
-                var x = traceIssue;
-                var t = x.message;
-                var buf=this.editor.getBuffer();
-                var ps=x.path;
-                if (x.unit){
-                    ps=x.unit.absolutePath();
-                }
-                if (ps){
-                    if (this.buffers[ps]){
-                        buf=this.buffers[ps];
-                    }
-                    else{
-                        buf=new TextBuffer(x.unit.contents());
-                        this.buffers[ps]=buf;
+    }
 
-                    }
-                }
-                var p1 = buf.positionForCharacterIndex(x.start);
-                var p2 = buf.positionForCharacterIndex(x.end);
+    private convertParserIssue(x:hl.ValidationIssue,iType:string):any {
+        var t = x.message;
+        var buf = this.editor.getBuffer();
+        var ps = x.path;
+        if (x.unit) {
+            ps = x.unit.absolutePath();
+        }
+        if (ps) {
+            if (this.buffers[ps]) {
+                buf = this.buffers[ps];
+            }
+            else {
+                buf = new TextBuffer(x.unit.contents());
+                this.buffers[ps] = buf;
 
-                var trace = {
-                    type: "Trace",
-                    filePath: x.path ? ps : this.editor.getPath(),
-                    text: t,
-                    range: [[p1.row, p1.column], [p2.row, p2.column]]
-                }
-                message.trace.push(trace);
             }
         }
+        var p1 = buf.positionForCharacterIndex(x.start);
+        var p2 = buf.positionForCharacterIndex(x.end);
+
+        var trace = {
+            type: iType,
+            filePath: x.path ? ps : this.editor.getPath(),
+            text: t,
+            range: [[p1.row, p1.column], [p2.row, p2.column]],
+            trace: [],
+        };
+        return trace;
     }
 
     acceptUnique(issue:hl.ValidationIssue){
