@@ -94,6 +94,32 @@ class FSProvider implements suggestions.IFSProvider {
     readDir(dirPath: string): string[] {
         return fs.readdirSync(dirPath);
     }
+
+    existsAsync(path: string): Promise<boolean> {
+        return new Promise(resolve => {
+            fs.exists(path, (result) => {resolve(result)})
+        });
+    }
+
+    /**
+     * Returns directory content list.
+     * @param fullPath
+     */
+    readDirAsync(path: string): Promise<string[]> {
+        return new Promise(resolve => {
+            fs.readdir(path, (err, result) => {resolve(result)})
+        });
+    }
+
+    /**
+     * Check whether the path points to a directory.
+     * @param fullPath
+     */
+    isDirectoryAsync(path: string): Promise<boolean> {
+        return new Promise(resolve => {
+            fs.stat(path, (err, stats) => {resolve(stats.isDirectory())})
+        });
+    }
 }
 
 class AtomEditorState implements suggestions.IEditorStateProvider {
