@@ -68,9 +68,9 @@
     "xmlhttprequest": "^1.7.0",
     "xtend": "^4.0.1",
     "yaml-ast-parser": "0.0.29",
-    "raml-1-parser": "0.2.31",
-    "raml-suggestions": "0.0.15",
-    "raml-actions" : "0.0.5"
+    "raml-1-parser": "1.1.1",
+    "raml-suggestions": "0.0.18",
+    "raml-actions" : "0.0.6"
   },
   "devDependencies": {
     "coffee-loader": "^0.7.2",
