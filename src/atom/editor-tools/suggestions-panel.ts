@@ -84,6 +84,16 @@ export function generateSuggestionsPanel(node:hl.IHighLevelNode):UI.UIComponent{
             return;
         }
     })
-    hc.addChild(UI.button("Delete",UI.ButtonSizes.EXTRA_SMALL,UI.ButtonHighlights.ERROR,UI.Icon.NONE,x=>node.parent().remove(node)).margin(3,3,3,3));
+    hc.addChild(UI.button("Delete",UI.ButtonSizes.EXTRA_SMALL,UI.ButtonHighlights.ERROR,UI.Icon.NONE,x => {
+        if(node.parent()) {
+            node.parent().remove(node);
+        } else {
+            node.lowLevel().unit().updateContent('');
+            
+            editorTools.aquireManager().updateText();
+
+            editorTools.aquireManager().updateDetails();
+        }
+    }).margin(3,3,3,3));
     return result;
 }
