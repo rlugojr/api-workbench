@@ -15,6 +15,9 @@ import highLevelAst=rp.hl;
 import RamlWrapper1=rp.api10;
 import RamlWrapper08=rp.api08;
 import atomUtil = require('../util/atom')
+
+
+
 var services = rp.ds;
 
 import ConsoleView = require('./console-view')
@@ -1303,7 +1306,7 @@ class MethodDemo extends PureComponent<NodeProps<RamlMethod>, {}> {
         {
           title: 'URI Parameters',
           prefix: undefined,
-          parameters: (<RamlResource> node.parent()).allUriParameters(),
+          parameters: localParameters(<RamlResource>node.parent()),
           values: this.props.state.uriParameters,
           change: (name: string, value: string) => this.props.setParameter('uriParameters', name, value)
         }
@@ -1506,33 +1509,7 @@ class EditParameters extends PureComponent<EditParametersProps, {}> {
           placeholder: parameter.default(),
           onChange: (value: string) => this.props.change(name, value)
         })
-
-        // if (definition.enum().getOrElse([]).length === 0) {
-        //   input = React.createElement(TextEditor, {
-        //     value: currentValue,
-        //     placeholder: definition.default().getOrElse(''),
-        //     onChange: (value: string) => this.props.change(name, value)
-        //   })
-        // } else {
-        //   input = React.createElement(
-        //     'select',
-        //     {
-        //       onChange: (e) => this.props.change(name, e.target.value),
-        //       className: 'form-control',
-        //       value: currentValue
-        //     },
-        //     definition.required() ? null : React.createElement('option'),
-        //     definition.enum().getOrElse([])
-        //       .filter((value) => value !== '')
-        //       .map((value, index) => {
-        //         return React.createElement('option', {
-        //           value: String(value),
-        //           key: index
-        //         }, String(value))
-        //       })
-        //   )
-        // }
-
+        
         return React.createElement(
           Block,
           { key: name },
@@ -1952,4 +1929,18 @@ function isJSON(content: any): boolean {
   } catch(exception) {
     return false;
   }
+}
+
+function localParameters(node: RamlResource): RamlTypeOrParameter[] {
+  var baseUriParams: string[] = (<any>node).ownerApi().baseUriParameters().map(param => param.name());
+  
+  return filter(node.absoluteUriParameters(), param => baseUriParams.indexOf(param.name()) < 0);
+}
+
+function filter(array: any[], condition: (element: any) => boolean): any[] {
+  var result: any[] = [];
+
+  array.forEach(element => condition(element) && result.push(element));
+
+  return result;
 }
