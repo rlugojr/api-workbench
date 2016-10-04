@@ -1,6 +1,6 @@
 {
   "name": "api-workbench",
-  "version": "0.8.37",
+  "version": "0.8.38",
   "description": "API Workbench",
   "private": true,
   "main": "./src/atom/main",
