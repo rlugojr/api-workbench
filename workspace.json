@@ -33,6 +33,16 @@
     "gitBranch" : "develop",
     "installTypings" : true
   },
+  "raml-xml-validation" : {
+    "build" : "npm run build",
+    "gitUrl" : "https://github.com/mulesoft-labs/raml-xml-validation.git",
+    "installTypings" : true
+  },
+  "raml-json-validation" : {
+    "build" : "npm run build",
+    "gitUrl" : "https://github.com/mulesoft-labs/raml-json-validation.git",
+    "installTypings" : true
+  },
   "ts-structure-parser" : {
     "build" : "npm run build",
     "gitUrl" : "https://github.com/mulesoft-labs/ts-structure-parser.git",
@@ -46,6 +56,7 @@
   "ts-model" : {
     "build" : "npm run build",
     "gitUrl" : "https://github.com/mulesoft-labs/ts-model.git",
+    "gitBranch" : "develop",
     "installTypings" : true
   },
   "atom-ui-lib" : {

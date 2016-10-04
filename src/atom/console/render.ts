@@ -15,6 +15,9 @@ import highLevelAst=rp.hl;
 import RamlWrapper1=rp.api10;
 import RamlWrapper08=rp.api08;
 import atomUtil = require('../util/atom')
+
+
+
 var services = rp.ds;
 
 import ConsoleView = require('./console-view')
@@ -1233,7 +1236,19 @@ class MethodDemo extends PureComponent<NodeProps<RamlMethod>, {}> {
     var bodies = (<RamlBody[]>node.body()).map(x => x.name())
     var securitySchemes = (<RamlSecuritySchemeRef[]>node.allSecuredBy()).map(x => x.securityScheme())
     var currentSecurityScheme = securitySchemes.filter(x => x != null && x.name() === securityScheme)[0]
+        
+    if(!this.props.state.bodies || Object.keys(this.props.state.bodies).length === 0) {
+      this.props.state.bodies = {};
 
+      (<RamlBody[]>node.body()).forEach((body: any) => {
+        var name = body.name();
+        
+        var example = body.example() || body.examples()[0];
+
+        example && (this.props.state.bodies[name] = example.value());
+      });
+    }
+    
     return React.createElement(
       Block,
       null,
@@ -1303,7 +1318,7 @@ class MethodDemo extends PureComponent<NodeProps<RamlMethod>, {}> {
         {
           title: 'URI Parameters',
           prefix: undefined,
-          parameters: (<RamlResource> node.parent()).allUriParameters(),
+          parameters: localParameters(<RamlResource>node.parent()),
           values: this.props.state.uriParameters,
           change: (name: string, value: string) => this.props.setParameter('uriParameters', name, value)
         }
@@ -1344,15 +1359,17 @@ class MethodDemo extends PureComponent<NodeProps<RamlMethod>, {}> {
             {
               onChange: (e) => this.props.setState({ body: e.target.value }),
               className: 'form-control',
-              value: contentType
+              value: contentType || bodies[0]
             },
             bodies.map(x => React.createElement('option', { key: x }, x))
           )
         ),
         React.createElement(<any> TextEditor, {
           mini: false,
-          value: this.props.state.bodies[contentType],
-          onChange: (body: string) => this.props.setParameter('bodies', contentType, body)
+          value: this.props.state.bodies[contentType || bodies[0]],
+          onChange: (body: string) => {
+            return this.props.setParameter('bodies', contentType || bodies[0], body);
+          }
         })
       ) : null,
       React.createElement(
@@ -1362,7 +1379,13 @@ class MethodDemo extends PureComponent<NodeProps<RamlMethod>, {}> {
           'div',
           {
             className: classnames('btn inline-block', METHOD_CLASS_MAP[method]),
-            onClick: () => this.props.execRequest()
+            onClick: () => {
+              if(!this.props.state.body) {
+                this.props.state.body = contentType || bodies[0];
+              }
+              
+              return this.props.execRequest();
+            }
           },
           method.toUpperCase()
         ),
@@ -1506,33 +1529,7 @@ class EditParameters extends PureComponent<EditParametersProps, {}> {
           placeholder: parameter.default(),
           onChange: (value: string) => this.props.change(name, value)
         })
-
-        // if (definition.enum().getOrElse([]).length === 0) {
-        //   input = React.createElement(TextEditor, {
-        //     value: currentValue,
-        //     placeholder: definition.default().getOrElse(''),
-        //     onChange: (value: string) => this.props.change(name, value)
-        //   })
-        // } else {
-        //   input = React.createElement(
-        //     'select',
-        //     {
-        //       onChange: (e) => this.props.change(name, e.target.value),
-        //       className: 'form-control',
-        //       value: currentValue
-        //     },
-        //     definition.required() ? null : React.createElement('option'),
-        //     definition.enum().getOrElse([])
-        //       .filter((value) => value !== '')
-        //       .map((value, index) => {
-        //         return React.createElement('option', {
-        //           value: String(value),
-        //           key: index
-        //         }, String(value))
-        //       })
-        //   )
-        // }
-
+        
         return React.createElement(
           Block,
           { key: name },
@@ -1571,7 +1568,7 @@ class TextEditor extends PureComponent<TextEditorProps, {}> {
   updateModel (props: TextEditorProps) {
     var editor = this.editor
     var model = editor.getModel()
-
+    
     this.cleanup()
 
     model.setMini(props.mini)
@@ -1593,7 +1590,11 @@ class TextEditor extends PureComponent<TextEditorProps, {}> {
 
     if (props.onChange) {
       this.disposable = model.onDidChange(() => {
+        var position = model.cursors[0].getBufferPosition();        
+        
         props.onChange(model.getText())
+
+        model.cursors[0].setBufferPosition(position);
       })
     }
   }
@@ -1952,4 +1953,18 @@ function isJSON(content: any): boolean {
   } catch(exception) {
     return false;
   }
+}
+
+function localParameters(node: RamlResource): RamlTypeOrParameter[] {
+  var baseUriParams: string[] = (<any>node).ownerApi().baseUriParameters().map(param => param.name());
+  
+  return filter(node.absoluteUriParameters(), param => baseUriParams.indexOf(param.name()) < 0);
+}
+
+function filter(array: any[], condition: (element: any) => boolean): any[] {
+  var result: any[] = [];
+
+  array.forEach(element => condition(element) && result.push(element));
+
+  return result;
 }
