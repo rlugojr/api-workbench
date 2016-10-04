@@ -47,7 +47,7 @@ function execProcess(config: ExecConfig) {
         var logObj = childProcess.execSync(config.callPath, {
             cwd: config.wrkDir,
             encoding: 'utf8',
-            stdio: [0,1,2]
+            stdio: 'pipe'
         });
 
         if(config.logEnabled) {
