@@ -1288,7 +1288,7 @@ class MethodDemo extends PureComponent<NodeProps<RamlMethod>, {}> {
             {
               title: undefined,
               prefix: `Security Scheme Query Parameter`,
-              parameters: currentSecurityScheme.describedBy().queryParameters(),
+              parameters: (currentSecurityScheme.describedBy() && currentSecurityScheme.describedBy().queryParameters()) || [],
               values: this.props.state.queryParameters,
               change: (name: string, value: string) => this.props.setParameter('queryParameters', name, value)
             }
@@ -1298,7 +1298,7 @@ class MethodDemo extends PureComponent<NodeProps<RamlMethod>, {}> {
             {
               title: undefined,
               prefix: `Security Scheme Header`,
-              parameters: currentSecurityScheme.describedBy().headers(),
+              parameters: (currentSecurityScheme.describedBy() &&  currentSecurityScheme.describedBy().headers()) || [],
               values: this.props.state.headers,
               change: (name: string, value: string) => this.props.setParameter('headers', name, value)
             }
