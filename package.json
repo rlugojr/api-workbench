@@ -68,7 +68,7 @@
     "xmlhttprequest": "^1.7.0",
     "xtend": "^4.0.1",
     "yaml-ast-parser": "0.0.30",
-    "raml-1-parser": "1.1.4",
+    "raml-1-parser": "1.1.6",
     "raml-suggestions": "0.0.20",
     "raml-actions" : "0.0.7"
   },
