@@ -561,11 +561,17 @@ class PropertyEditorInfo extends Item{
         return value;
     }
 
-    fromModelToEditor(){
+    fromModelToEditor() {
         var attr = this.node.attr(this.property.nameId());
 
-        if (attr || this.hasDefault()){
-            var val = attr ? attr.value() : this.getDefaultValue();
+        if (attr || this.hasDefault()) {
+            var value;
+            
+            if(this.property.getAdapter(def.RAMLPropertyService).isTypeExpr()) {
+                value = inheritedContent(this.node);
+            }
+            
+            var val = value || (attr ? attr.value() : this.getDefaultValue());
 
             if (val==null){
                 val="";
@@ -1241,9 +1247,9 @@ export function buildItem(node:hl.IHighLevelNode,dialog:boolean){
                 return;
             }
             if (x.getAdapter(def.RAMLPropertyService).isTypeExpr()){
-                var nm=node.attr(x.nameId());
-                if (nm){
-                    var vl=nm.value();
+                var vl = inheritedContent(node);
+                
+                if(vl) {
                     if (vl.trim().charAt(0)=='{'){
                         result.addItemToCategory(category(x,node), new JSONSchemaField(x, node));
                         return;
@@ -1335,4 +1341,20 @@ export function buildItem(node:hl.IHighLevelNode,dialog:boolean){
         result.addItemToCategory("Type",new TypeDisplayItem(node))
     }
     return result;
+}
+
+function inheritedContent(node: any): string {
+    var type = (node.associatedType && node.associatedType()) || (node.localType && node.localType())
+
+    while(type) {
+        if(type.superTypes().length > 1) {
+            return '';
+        }
+
+        if(type.isExternal()) {
+            return type.schemaString;
+        }
+
+        type = type.superTypes()[0];
+    }
 }

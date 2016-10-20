@@ -4,6 +4,7 @@ import fs = require ('fs')
 import path = require ('path')
 import rp=require("raml-1-parser")
 import hl=rp.hl;
+import utils=rp.utils;
 import rr=rp.utils;
 
 import _=require("underscore")
@@ -149,7 +150,7 @@ function actualLint(textEditor:AtomCore.IEditor) {
         return [];
     }
     var result:any[]=[];
-    var acceptor=new Acceptor(textEditor, result);
+    var acceptor=new Acceptor(textEditor, result, astNode.root());
     var c=astNode.lowLevel() ? astNode.lowLevel().unit().contents() : "";
     var tab=0;
     while (true) {
@@ -203,21 +204,21 @@ function actualLint(textEditor:AtomCore.IEditor) {
         return x;
     });
 }
-class Acceptor implements hl.ValidationAcceptor{
+class Acceptor extends utils.PointOfViewValidationAcceptorImpl{
 
-    constructor(private editor:AtomCore.IEditor,private errors:any[]){
-
+    constructor(private editor:AtomCore.IEditor, errors:any[],
+                primaryUnit : hl.IParseResult){
+        super(errors, primaryUnit)
     }
     buffers:{[path:string]:any}={}
 
-    begin() {
-    }
-
-    accept(_issue:hl.ValidationIssue) {
-        if (!_issue){
+    accept(issue:hl.ValidationIssue) {
+        if (!issue){
             return;
         }
-        var issue:hl.ValidationIssue = _issue;
+
+        this.transformIssue(issue);
+
         var issueType = issue.isWarning?"Warning":'Error';
         var issuesArray:hl.ValidationIssue[] = [];
         while(issue){
@@ -280,6 +281,6 @@ class Acceptor implements hl.ValidationAcceptor{
 }
 function gatherValidationErrors(astNode:hl.IParseResult,errors:any[],editor:AtomCore.IEditor){
     if (astNode) {
-        astNode.validate(new Acceptor(editor,errors))
+        astNode.validate(new Acceptor(editor,errors, astNode.root()))
     }
 }

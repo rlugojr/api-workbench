@@ -1033,37 +1033,40 @@ class AbstractMethod extends PureComponent<NodeProps<RamlMethodBase>, {}> {
     if (isRAML10(body)) {
       var bodyType = <RamlWrapper1.TypeDeclaration>body;
 
-      var examples : RamlWrapper1.ExampleSpec[] = bodyType.examples();
-      if (examples && examples.length > 0) {
+      var runtimeType = bodyType.runtimeType();
 
-        return examples.map((example : RamlWrapper1.ExampleSpec) => {
+      if (runtimeType) {
+        var examples = runtimeType.examples(true);
+        if (examples && examples.length > 0) {
+          return examples.map((example : highLevelAst.IExpandableExample) => {
 
-          var exampleName = example.name()?example.name():"Example";
-          var displayName = example.displayName()?example.displayName():exampleName;
+            var exampleName = example.name()?example.name():"Example";
+            var displayName = example.displayName()?example.displayName():exampleName;
 
-          return React.createElement(<any>MarkupBlock, {
-            key: displayName,
-            content: this.exampleToString(example),
-            title: "Example",
-            name: exampleName,
-            mime: (<RamlWrapper1.TypeDeclaration>body).name(),
-            setState: this.props.setState,
-            state: this.props.state
+            return React.createElement(<any>MarkupBlock, {
+              key: displayName,
+              content: example.asString(),
+              title: "Example",
+              name: exampleName,
+              mime: (<RamlWrapper1.TypeDeclaration>body).name(),
+              setState: this.props.setState,
+              state: this.props.state
+            })
           })
-        })
+        }
       }
 
-      var singleExampleNode = bodyType.example();
-      var singleExampleContent = singleExampleNode?this.exampleToString(singleExampleNode):null;
-      if (singleExampleContent && singleExampleContent != "null" && typeof(singleExampleContent) == "string") {
-        return [React.createElement(<any>MarkupBlock, {
-          content: singleExampleContent,
-          title: 'Example',
-          mime: (<RamlWrapper1.TypeDeclaration>body).name(),
-          setState: this.props.setState,
-          state: this.props.state
-        })]
-      }
+      // var singleExampleNode = bodyType.example();
+      // var singleExampleContent = singleExampleNode?this.exampleToString(singleExampleNode):null;
+      // if (singleExampleContent && singleExampleContent != "null" && typeof(singleExampleContent) == "string") {
+      //   return [React.createElement(<any>MarkupBlock, {
+      //     content: singleExampleContent,
+      //     title: 'Example',
+      //     mime: (<RamlWrapper1.TypeDeclaration>body).name(),
+      //     setState: this.props.setState,
+      //     state: this.props.state
+      //   })]
+      // }
 
     } else if (RamlWrapper08.isBodyLike(body)){
 
@@ -1285,7 +1288,7 @@ class MethodDemo extends PureComponent<NodeProps<RamlMethod>, {}> {
             {
               title: undefined,
               prefix: `Security Scheme Query Parameter`,
-              parameters: currentSecurityScheme.describedBy().queryParameters(),
+              parameters: (currentSecurityScheme.describedBy() && currentSecurityScheme.describedBy().queryParameters()) || [],
               values: this.props.state.queryParameters,
               change: (name: string, value: string) => this.props.setParameter('queryParameters', name, value)
             }
@@ -1295,7 +1298,7 @@ class MethodDemo extends PureComponent<NodeProps<RamlMethod>, {}> {
             {
               title: undefined,
               prefix: `Security Scheme Header`,
-              parameters: currentSecurityScheme.describedBy().headers(),
+              parameters: (currentSecurityScheme.describedBy() &&  currentSecurityScheme.describedBy().headers()) || [],
               values: this.props.state.headers,
               change: (name: string, value: string) => this.props.setParameter('headers', name, value)
             }
