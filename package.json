@@ -1,6 +1,6 @@
 {
   "name": "api-workbench",
-  "version": "0.8.38",
+  "version": "0.8.39",
   "description": "API Workbench",
   "private": true,
   "main": "./src/atom/main",
@@ -69,8 +69,8 @@
     "xtend": "^4.0.1",
     "yaml-ast-parser": "0.0.30",
     "raml-1-parser": "1.1.6",
-    "raml-suggestions": "0.0.20",
-    "raml-actions" : "0.0.7"
+    "raml-suggestions": "0.0.22",
+    "raml-actions" : "0.0.8"
   },
   "devDependencies": {
     "coffee-loader": "^0.7.2",
