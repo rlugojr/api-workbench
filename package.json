@@ -1,6 +1,6 @@
 {
   "name": "api-workbench",
-  "version": "0.8.38",
+  "version": "0.8.39",
   "private": true,
   "main": "main.js",
   "repository": "https://github.com/mulesoft/api-workbench",
@@ -57,9 +57,9 @@
     "xmldom": "0.1.19",
     "xmlhttprequest": "^1.7.0",
     "xtend": "^4.0.1",
-    "yaml-ast-parser": "0.0.29",
-    "raml-1-parser": "1.1.4",
-    "raml-suggestions": "0.0.20",
-    "raml-actions": "0.0.7"
+    "yaml-ast-parser": "0.0.30",
+    "raml-1-parser": "1.1.6",
+    "raml-suggestions": "0.0.22",
+    "raml-actions": "0.0.8"
   }
 }
