@@ -34,7 +34,8 @@ module package_entry_point {
                     'api-workbench:quick-commands': quickCommands.showCommands,
                     'api-workbench:rename':decl.renameRAMLElement,
                     'api-workbench:new-project':decl.newProject,
-                    'api-workbench:select-node':decl.select
+                    'api-workbench:select-node':decl.select,
+                    'api-workbench:revalidate':decl.revalidate
                 }))
 
                 subscriptions.add(atom.workspace.addOpener(Console.opener))

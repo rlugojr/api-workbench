@@ -26,6 +26,7 @@ var services=def
 import move=require("./moveElementsDialog")
 import tooltip=require("../core/tooltip-manager")
 import yaml = require("yaml-ast-parser")
+import linterUI = require("../core/linter-ui")
 
 import editorTools = require("../editor-tools/editor-tools")
 import {universeHelpers} from "raml-1-parser/dist/index";
@@ -499,6 +500,13 @@ export class MoveToNewFileDialog{
 }
 export function moveOut(h:hl.IHighLevelNode){
     new MoveToNewFileDialog(h).show()
+}
+
+export function revalidate() {
+    var currentEditor = getActiveEditor();
+    if (!currentEditor) return;
+
+    linterUI.relint(currentEditor);
 }
 
 export function renameRAMLElement() {
