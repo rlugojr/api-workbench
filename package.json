@@ -70,7 +70,7 @@
     "yaml-ast-parser": "0.0.30",
     "raml-1-parser": "1.1.7",
     "raml-suggestions": "0.0.23",
-    "raml-actions" : "0.0.8",
+    "raml-actions" : "0.0.9",
     "raml-xml-validation": "0.0.5",
     "raml-json-validation": "0.0.6"
   },
