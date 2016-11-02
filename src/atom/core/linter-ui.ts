@@ -17,7 +17,7 @@ export var lintOnFly= true;
 var lintersToDestroy = [];
 var linterApiProxy:any={};
 
-var relint = function (editor:AtomCore.IEditor)  {
+export var relint = function (editor:AtomCore.IEditor)  {
     var editorPath = editor.getPath && editor.getPath();
 
     var extName = editorPath && path.extname(editorPath);
