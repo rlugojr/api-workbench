@@ -129,4 +129,5 @@ export function initialize() {
 
     commonContextActions.initialize(editorProvider, astProvider, astModifier);
     outlineInitializer.initialize(editorProvider, astProvider);
+    provider.initialize(astProvider);
 }

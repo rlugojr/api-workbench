@@ -9,6 +9,7 @@ import lowLevel=rp.ll;
 import _ = require('underscore');
 
 import suggestions = require('raml-suggestions');
+import sharedAstInitializerInterfaces = require('../shared-ast-initializer-interfaces');
 
 export var selector= '.source.raml'
 export var disableForSelector= '.text.html .comment'
@@ -23,6 +24,10 @@ export interface AtomCompletionRequest {
 }
 
 import editorTools=require("../editor-tools/editor-tools")
+
+export function initialize(astProvider : sharedAstInitializerInterfaces.IASTProvider) {
+    suggestions.setDefaultASTProvider(<any>astProvider);
+}
 
 export function onDidInsertSuggestion(event:{editor:AtomCore.IEditor; triggerPosition:any; suggestion: any}){
     var offset=event.editor.getBuffer().characterIndexForPosition(event.triggerPosition);
@@ -93,6 +98,21 @@ class FSProvider implements suggestions.IFSProvider {
 
     readDir(dirPath: string): string[] {
         return fs.readdirSync(dirPath);
+    }
+
+    existsAsync(path: string): Promise<boolean> {
+        //we do not call it in the async mode
+        return null;
+    }
+
+    readDirAsync(path: string): Promise<string[]> {
+        //we do not call it in the async mode
+        return null;
+    }
+
+    isDirectoryAsync(path: string): Promise<boolean> {
+        //we do not call it in the async mode
+        return null;
     }
 }
 
