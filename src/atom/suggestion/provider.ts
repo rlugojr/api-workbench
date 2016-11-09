@@ -101,18 +101,29 @@ class FSProvider implements suggestions.IFSProvider {
     }
 
     existsAsync(path: string): Promise<boolean> {
-        //we do not call it in the async mode
-        return null;
+        return new Promise(resolve => {
+            fs.exists(path, (result) => {resolve(result)})
+        });
     }
 
+    /**
+     * Returns directory content list.
+     * @param fullPath
+     */
     readDirAsync(path: string): Promise<string[]> {
-        //we do not call it in the async mode
-        return null;
+        return new Promise(resolve => {
+            fs.readdir(path, (err, result) => {resolve(result)})
+        });
     }
 
+    /**
+     * Check whether the path points to a directory.
+     * @param fullPath
+     */
     isDirectoryAsync(path: string): Promise<boolean> {
-        //we do not call it in the async mode
-        return null;
+        return new Promise(resolve => {
+            fs.stat(path, (err, stats) => {resolve(stats.isDirectory())})
+        });
     }
 }
 

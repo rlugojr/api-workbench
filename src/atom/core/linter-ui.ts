@@ -4,6 +4,7 @@ import fs = require ('fs')
 import path = require ('path')
 import rp=require("raml-1-parser")
 import hl=rp.hl;
+import utils=rp.utils;
 import rr=rp.utils;
 import unitUtils = require("../util/unit")
 
@@ -17,7 +18,7 @@ export var lintOnFly= true;
 var lintersToDestroy = [];
 var linterApiProxy:any={};
 
-var relint = function (editor:AtomCore.IEditor)  {
+export var relint = function (editor:AtomCore.IEditor)  {
     var editorPath = editor.getPath && editor.getPath();
 
     var extName = editorPath && path.extname(editorPath);
@@ -106,6 +107,35 @@ function isRAMLUnit(editor) {
     return unitUtils.isRAMLUnit(contents)
 }
 
+var combErrors = function (result:any[]) {
+    var map = {};
+    result.forEach(x=> {
+        var original = JSON.parse(JSON.stringify(x));
+        original.trace = null;
+        var newKey = JSON.stringify(original);
+        var tr = map[newKey];
+        if (tr) {
+            tr.push(x);
+        }
+        else {
+            map[newKey] = [x];
+        }
+    });
+    var rs:any[] = [];
+    for (var i in map) {
+        var mes = JSON.parse(i);
+        mes.trace = [];
+        var ms = map[i];
+        ms.forEach(x=> {
+            if (x.trace) {
+                mes.trace = mes.trace.concat(x.trace);
+            }
+        })
+        mes.trace = combErrors(mes.trace);
+        rs.push(mes);
+    }
+    return rs;
+};
 function actualLint(textEditor:AtomCore.IEditor) {
     execLinterCallback(textEditor);
 
@@ -121,7 +151,7 @@ function actualLint(textEditor:AtomCore.IEditor) {
         return [];
     }
     var result:any[]=[];
-    var acceptor=new Acceptor(textEditor, result);
+    var acceptor=new Acceptor(textEditor, result, astNode.root());
     var c=astNode.lowLevel() ? astNode.lowLevel().unit().contents() : "";
     var tab=0;
     while (true) {
@@ -151,31 +181,7 @@ function actualLint(textEditor:AtomCore.IEditor) {
     gatherValidationErrors(astNode,result,textEditor);
 
     var l1=new Date().getTime();
-    var map={};
-    result.forEach(x=>{
-        var original=JSON.parse(JSON.stringify(x));
-        original.trace=null;
-        var newKey=JSON.stringify(original);
-        var tr=map[newKey];
-        if (tr){
-            tr.push(x);
-        }
-        else{
-            map[newKey]=[x];
-        }
-    });
-    var rs:any[]=[];
-    for (var i in map){
-        var mes=JSON.parse(i);
-        mes.trace=[];
-        var ms=map[i];
-        ms.forEach(x=>{
-            if (x.trace){
-                mes.trace=mes.trace.concat(x.trace);
-            }
-        })
-        rs.push(mes);
-    }
+    var rs = combErrors(result);
     if (editorTools.aquireManager()) {
         if (editorTools.aquireManager().performanceDebug) {
             console.log("Linting took:" + (l1 - l))
@@ -199,70 +205,72 @@ function actualLint(textEditor:AtomCore.IEditor) {
         return x;
     });
 }
-class Acceptor implements hl.ValidationAcceptor{
+class Acceptor extends utils.PointOfViewValidationAcceptorImpl{
 
-    constructor(private editor:AtomCore.IEditor,private errors:any[]){
-
+    constructor(private editor:AtomCore.IEditor, errors:any[],
+                primaryUnit : hl.IParseResult){
+        super(errors, primaryUnit)
     }
     buffers:{[path:string]:any}={}
 
-    begin() {
-    }
-
-    accept(_issue:hl.ValidationIssue) {
-        if (!_issue){
+    accept(issue:hl.ValidationIssue) {
+        if (!issue){
             return;
         }
-        var issue:hl.ValidationIssue = _issue;
-        if(_issue.extras && _issue.extras.length>0){
-            issue = _issue.extras[0];
-            var traceIssue = _issue;
+
+        this.transformIssue(issue);
+
+        var issueType = issue.isWarning?"Warning":'Error';
+        var issuesArray:hl.ValidationIssue[] = [];
+        while(issue){
+            issuesArray.push(issue);
+            if(issue.extras && issue.extras.length>0){
+                issue = issue.extras[0];
+            }
+            else{
+                issue = null;
+            }
+        }        
+        var issues = issuesArray.reverse().map(x=>{
+            var result = this.convertParserIssue(x,issueType);
+            issueType = "Trace";
+            return result;
+        });
+        for(var i = 0 ; i < issues.length-1; i++){
+            issues[0].trace.push(issues[i+1]);
         }
-        
-        var p1=this.editor.getBuffer().positionForCharacterIndex(issue.start);
-        var p2=this.editor.getBuffer().positionForCharacterIndex(issue.end);
-        var t=issue.message;
-        var pos=t.lastIndexOf(" at line ");
-        if (pos!=-1){
-            t=t.substring(0,pos);//it is message from yaml lets cut line info
-        }
-        var message = {type: (issue.isWarning?"Warning":'Error'),
-            filePath:issue.path?issue.path:this.editor.getPath(),
-            text: t,
-            trace:[],
-            range:[[p1.row,p1.column], [p2.row,p2.column]]}
+        var message = issues[0];
         this.errors.push(message);
-        if (traceIssue) {
-            {
-                var x = traceIssue;
-                var t = x.message;
-                var buf=this.editor.getBuffer();
-                var ps=x.path;
-                if (x.unit){
-                    ps=x.unit.absolutePath();
-                }
-                if (ps){
-                    if (this.buffers[ps]){
-                        buf=this.buffers[ps];
-                    }
-                    else{
-                        buf=new TextBuffer(x.unit.contents());
-                        this.buffers[ps]=buf;
+    }
 
-                    }
-                }
-                var p1 = buf.positionForCharacterIndex(x.start);
-                var p2 = buf.positionForCharacterIndex(x.end);
+    private convertParserIssue(x:hl.ValidationIssue,iType:string):any {
+        var t = x.message;
+        var buf = this.editor.getBuffer();
+        var ps = x.path;
+        if (x.unit) {
+            ps = x.unit.absolutePath();
+        }
+        if (ps) {
+            if (this.buffers[ps]) {
+                buf = this.buffers[ps];
+            }
+            else {
+                buf = new TextBuffer(x.unit.contents());
+                this.buffers[ps] = buf;
 
-                var trace = {
-                    type: "Trace",
-                    filePath: x.path ? ps : this.editor.getPath(),
-                    text: t,
-                    range: [[p1.row, p1.column], [p2.row, p2.column]]
-                }
-                message.trace.push(trace);
             }
         }
+        var p1 = buf.positionForCharacterIndex(x.start);
+        var p2 = buf.positionForCharacterIndex(x.end);
+
+        var trace = {
+            type: iType,
+            filePath: x.path ? ps : this.editor.getPath(),
+            text: t,
+            range: [[p1.row, p1.column], [p2.row, p2.column]],
+            trace: [],
+        };
+        return trace;
     }
 
     acceptUnique(issue:hl.ValidationIssue){
@@ -274,6 +282,6 @@ class Acceptor implements hl.ValidationAcceptor{
 }
 function gatherValidationErrors(astNode:hl.IParseResult,errors:any[],editor:AtomCore.IEditor){
     if (astNode) {
-        astNode.validate(new Acceptor(editor,errors))
+        astNode.validate(new Acceptor(editor,errors, astNode.root()))
     }
 }

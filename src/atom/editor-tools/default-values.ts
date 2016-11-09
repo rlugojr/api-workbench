@@ -6,7 +6,7 @@ var universe=ds.universesInfo
 
 export function getDefaultValue(node: hl.IHighLevelNode, property: hl.IProperty) {
     if(property.nameId() === <string>universe.Universe10.TypeDeclaration.properties.required.name) {
-        return node.name().indexOf("?")==node.name().length-1;
+        return node.name().indexOf("?") !== node.name().length - 1;
     }
 }
 
