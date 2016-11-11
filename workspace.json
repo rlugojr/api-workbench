@@ -9,14 +9,14 @@
   "raml-outline" : {
     "build" : "npm run build",
     "test" : "gulp test",
-    "gitUrl" : "https://github.com/dreamflyer/raml-outline.git",
+    "gitUrl" : "https://github.com/mulesoft/raml-outline.git",
     "gitBranch" : "develop",
     "installTypings" : true
   },
   "raml-suggestions" : {
     "build" : "npm run build",
     "test" : "npm run test-cov",
-    "gitUrl" : "https://github.com/dreamflyer/raml-suggestions.git",
+    "gitUrl" : "https://github.com/mulesoft/raml-suggestions.git",
     "gitBranch" : "develop",
     "installTypings" : true
   },
