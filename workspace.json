@@ -8,7 +8,6 @@
   },
   "raml-outline" : {
     "build" : "npm run build",
-    "test" : "gulp test",
     "gitUrl" : "https://github.com/mulesoft/raml-outline.git",
     "gitBranch" : "develop",
     "installTypings" : true
