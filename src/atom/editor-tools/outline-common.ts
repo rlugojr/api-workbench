@@ -51,7 +51,14 @@ export function isResourceTypeOrTrait(p: hl.IHighLevelNode) {
 }
 
 export function isSchemaOrType(p: hl.IHighLevelNode) {
-    var pc=p.definition().key();
-    return (pc===universes.Universe08.GlobalSchema)|| (p.property() && p.property().nameId()
-        == universes.Universe10.LibraryBase.properties.types.name);
+
+    if (p.parent() && p.parent().parent() == null) {
+        var property = p.property();
+
+        return property.nameId() == universes.Universe10.LibraryBase.properties.types.name ||
+            property.nameId() == universes.Universe10.LibraryBase.properties.schemas.name ||
+            property.nameId() == universes.Universe08.Api.properties.schemas.name;
+    }
+
+    return false;
 }
