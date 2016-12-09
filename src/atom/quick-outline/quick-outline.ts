@@ -37,7 +37,7 @@ class QuickOutlineDialog{
         }, model=>{
             var editor = this._editor;
             var buffer = editor.getBuffer();
-            var posStart = buffer.positionForCharacterIndex(model.lowLevel().start());
+            var posStart = buffer.positionForCharacterIndex(model.getSource().lowLevel().start());
 
             editor.setCursorScreenPosition(posStart);
             zz.destroy();

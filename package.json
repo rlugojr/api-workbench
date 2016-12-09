@@ -92,8 +92,9 @@
     "typings": "^0.6.8",
     "webpack": "1.4.2",
     "node-libs-browser": "^0.5.2",
-    "typescript": "1.7.3",
+    "typescript": "1.8.7",
     "dev-env-installer":"0.0.6",
-    "run-sequence":"^1.0.0"
+    "run-sequence":"^1.0.0",
+    "raml-outline":"0.0.1"
   }
 }

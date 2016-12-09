@@ -87,15 +87,22 @@ export function updateDetailsPanel(node: hl.IHighLevelNode, panel: UI.Panel, upd
             item.addListener(x=> {
                 editorTools.aquireManager().updateText(null);
             })
-            var rend = item.render({});
-            //var oldDispose=rend.dispose;
-            if (oldItem) {
+            var rend;
+            try {
+                rend = item.render({});
+            } finally {
+                if (oldItem) {
+                    oldItem.detach();
+                }
 
-                oldItem.detach();
+                oldItem = item;
+
+                if (rend) {
+                    panel.addChild(rend);
+                }
+
+                empty = false;
             }
-            oldItem = item;
-            panel.addChild(rend);
-            empty = false;
         }
 
         if (toFocus) {
