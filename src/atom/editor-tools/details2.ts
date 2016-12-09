@@ -417,7 +417,7 @@ class TopLevelNode extends Category{
                 if (error.extras&&error.extras.length>0){
                     error=error.extras[0];
                 }
-                var item=this.item(error.node.name());
+                var item = error.node && this.item(error.node.name());
                 if (item){
                     item.setError(error.message);
                 }
