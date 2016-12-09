@@ -9,6 +9,7 @@ import lowLevel=rp.ll;
 import _ = require('underscore');
 
 import suggestions = require('raml-suggestions');
+import sharedAstInitializerInterfaces = require('../shared-ast-initializer-interfaces');
 
 export var selector= '.source.raml'
 export var disableForSelector= '.text.html .comment'
@@ -23,6 +24,10 @@ export interface AtomCompletionRequest {
 }
 
 import editorTools=require("../editor-tools/editor-tools")
+
+export function initialize(astProvider : sharedAstInitializerInterfaces.IASTProvider) {
+    suggestions.setDefaultASTProvider(<any>astProvider);
+}
 
 export function onDidInsertSuggestion(event:{editor:AtomCore.IEditor; triggerPosition:any; suggestion: any}){
     var offset=event.editor.getBuffer().characterIndexForPosition(event.triggerPosition);

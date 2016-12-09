@@ -18,6 +18,7 @@ import yaml=require("yaml-ast-parser")
 import universeHelpers = rp.universeHelpers;
 import universeModule = rp.universes;
 import search = rp.search;
+import universes=rp.universes
 
 import util = require("../../util/index");
 
@@ -279,10 +280,107 @@ export function createSmallSelectionPanel(node:hl.IHighLevelNode,filter:(x:hl.IH
     v.margin(3,3,3,3)
     return v;
 }
+
+export class HLRenderer implements UI.ICellRenderer<hl.IParseResult>{
+
+    constructor(private opener: (x: hl.IParseResult) => void) {
+
+    }
+    render(model: hl.IParseResult): UI.BasicComponent<any> {
+        try {
+            if (model.isAttr()) {
+                var attr = <hl.IAttribute>model;
+                return UI.hc(UI.label(attr.name() + ":" + attr.value()), UI.a("", x=> {
+                    var p1 = editorTools.aquireManager().getCurrentEditor().getBuffer().positionForCharacterIndex(model.lowLevel().start());
+                    var p2 = editorTools.aquireManager().getCurrentEditor().getBuffer().positionForCharacterIndex(model.lowLevel().end());
+                    editorTools.aquireManager().getCurrentEditor().setSelectedBufferRange({ start: p1, end: p1 }, {});
+
+                }, UI.Icon.ARROW_SMALL_LEFT, null, null));
+
+            }
+            if (model.isUnknown()) {
+                return UI.label("unknown");
+            }
+            var icon = UI.Icon.DASH;
+            var highLight = UI.TextClasses.NORMAL;
+            var node = <hl.IHighLevelNode>model;
+            var pc=node.definition().key();
+            if (pc === universes.Universe08.Resource||pc===universes.Universe10.Resource) {
+                icon = UI.Icon.PRIMITIVE_SQUARE;
+                highLight = UI.TextClasses.HIGHLIGHT;
+            }
+            if (pc === universes.Universe08.Method||pc===universes.Universe10.Method) {
+                icon = UI.Icon.PRIMITIVE_DOT
+                highLight = UI.TextClasses.WARNING;
+            }
+            if (pc === universes.Universe08.AbstractSecurityScheme||pc===universes.Universe10.AbstractSecurityScheme) {
+                icon = UI.Icon.LOCK;
+                highLight = UI.TextClasses.HIGHLIGHT;
+            }
+            if (pc === universes.Universe08.AbstractSecurityScheme||pc==universes.Universe10.AbstractSecurityScheme) {
+                icon = UI.Icon.FILE_SUBMODULE;
+                highLight = UI.TextClasses.NORMAL;
+            }
+            if (pc==universes.Universe10.TypeDeclaration && universeHelpers.isAnnotationTypesProperty(node.property())) {
+                icon = UI.Icon.TAG;
+                highLight = UI.TextClasses.HIGHLIGHT;
+            }
+            if (node.definition().isAssignableFrom(universes.Universe10.TypeDeclaration.name)||
+                node.definition().isAssignableFrom(universes.Universe08.Parameter.name)) {
+                if (node.property()&&node.property().nameId()==universes.Universe10.ObjectTypeDeclaration.properties.properties.name){
+                    icon = UI.Icon.FILE_BINARY;
+                    highLight = UI.TextClasses.SUCCESS;
+                }
+                else {
+                    icon = UI.Icon.FILE_BINARY
+                    highLight = UI.TextClasses.SUCCESS;
+                }
+            }
+            var nm=model.name();
+            var hnode=(<hl.IHighLevelNode>model);
+            if (pc===universes.Universe08.DocumentationItem||pc===universes.Universe10.DocumentationItem){
+                icon = UI.Icon.BOOK
+                var a=hnode.attr("title");
+                if (a){
+                    nm=a.value();
+                }
+            }
+            var extraText="";
+            var extraClass=UI.TextClasses.NORMAL;
+
+            var hc=UI.hc(UI.label(nm, icon, highLight))
+            var tp=node.attr("type");
+            if (tp){
+                var vl=tp.value();
+                if (vl==null){
+                    vl="";
+                }
+                var sv="";
+                if (typeof vl ==="object"){
+                    sv=":"+(<hl.IStructuredValue>vl).valueName();
+                }
+                else{
+                    sv=":"+vl;
+                }
+                hc.addChild(UI.label(sv, UI.Icon.NONE, UI.TextClasses.WARNING).margin(2,0,0,0));
+            }
+            if (node.lowLevel().unit()!=node.root().lowLevel().unit()){
+                highLight=UI.TextClasses.SUBTLE;
+                hc.addChild(UI.label("("+node.lowLevel().unit().path()+")",UI.Icon.NONE,highLight).margin(5,0,0,0));
+            }
+            hc.addClass("outline");
+            return hc;
+        } catch (e) {
+            console.log(e);
+            return UI.hc(UI.label("Illegal node", UI.Icon.ARROW_SMALL_LEFT, null, null));
+        }
+    }
+}
+
 export function createVIewer(h:hl.IHighLevelNode,filter:(x:hl.IHighLevelNode)=>boolean) {
     var v= UI.treeViewer((x:hl.IHighLevelNode)=>{
         return x.elements().filter(x=>filter(x))
-    }, new outlineView.HLRenderer(model=> {
+    }, new HLRenderer(model=> {
     }));
     v.setInput(h);
     return v;
