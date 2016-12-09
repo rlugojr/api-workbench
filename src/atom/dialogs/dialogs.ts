@@ -26,8 +26,7 @@ import details2=require("../editor-tools/details2")
 import details=require("../editor-tools/details")
 import editorTools=require("../editor-tools/editor-tools")
 import schemaUI=require("../editor-tools/schemaUI")
-var remote = require('remote');
-var dialog = remote.require('electron').dialog;
+
 import _=require("underscore")
 import pair = require("../../util/pair");
 import universeModule = rp.universes;
@@ -35,8 +34,26 @@ import universeHelpers = rp.universeHelpers;
 
 var _dialogPanels: UI.Panel[] = [];
 
+var remote = require("remote");
+
+var dialog;
+
+function getDialog() {
+    if(!dialog) {
+        try {
+            dialog = remote.require("electron").dialog;
+        } catch(e) {
+            console.log(e.message);
+        }
+    }
+
+    return dialog;
+}
+
+dialog = getDialog();
+
 export function showError(message: string, details: string) {
-    dialog.showMessageBox(remote.getCurrentWindow(), { type: 'error', buttons: ['Okay'], title: 'Error', message: message, detail: details});
+    getDialog().showMessageBox(remote.getCurrentWindow(), { type: 'error', buttons: ['Okay'], title: 'Error', message: message, detail: details});
 }
 var _methodDescriptions = null;
 
@@ -710,7 +727,7 @@ function saveSchema(name: string, value: string) {
         default:
             filter = [];
     }
-    var result = dialog.showSaveDialog(remote.getCurrentWindow(), {
+    var result = getDialog().showSaveDialog(remote.getCurrentWindow(), {
         title: 'Save schema',
         defaultPath: path.resolve(projectFolder, "schemas", name + ext),
         filters: filter
