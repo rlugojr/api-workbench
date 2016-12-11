@@ -33,8 +33,6 @@ export var relint = function (editor:AtomCore.IEditor)  {
 
         if(!rr.hasAsyncRequests()) {
             linterApiProxy.setMessages(linter, res);
-
-            console.log("Messages: " + res.length);
         }
 
         setupLinterCallback(editor, () => linterApiProxy.deleteMessages(linter));
@@ -48,10 +46,17 @@ export var relint = function (editor:AtomCore.IEditor)  {
         });
     }
 }
+
+function relintLater(editor: any) {
+    Promise.resolve(editor).then(editor => {
+        relint(editor);
+    });
+}
+
 export function initEditorObservers(linterApi) {
     linterApiProxy=linterApi;
     rr.addLoadCallback(x => {
-        atom.workspace.getTextEditors().forEach(x=>relint(x));
+        atom.workspace.getTextEditors().forEach(x=>relintLater(x));
 
         var manager = editorTools.aquireManager();
 
@@ -59,7 +64,7 @@ export function initEditorObservers(linterApi) {
             manager.updateDetails();
         }
     })
-    atom.workspace.observeTextEditors(relint);
+    atom.workspace.observeTextEditors(relintLater);
     return {
         dispose: () => {
             lintersToDestroy.forEach(linter => {
