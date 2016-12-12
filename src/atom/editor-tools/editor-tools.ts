@@ -214,22 +214,60 @@ class EditorManager{
         var pos = node ? editor.getBuffer().positionForCharacterIndex(node.start()) : null;
         if (pos) (<any>editor).setCursorBufferPosition(pos);
     }
+    
+    private setViewsDisplayStyle(visible: boolean) {
+        if(this._details && (<any>this)._details.element) {
+            (<any>this)._details.element.style.display = visible ? null : "none";
+        }
 
+        if(this._view && (<any>this)._view.element) {
+            (<any>this)._view.element.style.display = visible ? null : "none";
+        }
+    }
+    
+    private isRaml(editor): boolean {
+        if(!editor) {
+            return false;
+        }
 
-
+        var editorPath = editor.getPath();
+        
+        if(!editorPath) {
+            return false;
+        }
+        
+        var extName = path.extname(editorPath);
+        
+        if(extName !== '.raml') {
+            return false;
+        }
+        
+        return true;
+    }
+    
     private updateEverything(display: boolean = true) {
         var editor = atom.workspace.getActiveTextEditor();
-        if (!editor || this.currentEditor == editor) return;
-        var pth=editor.getPath();
-        if (!pth || path.extname(pth) != ".raml") return;
+
+        this.setViewsDisplayStyle(this.isRaml(editor));
+        
+        if(!editor || editor == this.currentEditor || !this.isRaml(editor)) {
+            return;
+        }
+
         this.currentEditor = editor;
+
         if (this.opened == false && display) this.display();
+
         if (!(<any>editor).patched) {
            this.addListenersToEditor( editor);
         }
+
         this.reparseAST();
+
         var pos = (<any>editor.getBuffer()).characterIndexForPosition(editor.getCursorBufferPosition());
+
         this.positionUpdated(pos);
+
         this.scheduleViewsUpdate();
     }
 
