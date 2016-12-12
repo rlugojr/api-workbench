@@ -247,8 +247,10 @@ class EditorManager{
     
     private updateEverything(display: boolean = true) {
         var editor = atom.workspace.getActiveTextEditor();
-
-        this.setViewsDisplayStyle(this.isRaml(editor));
+        
+        if(editor) {
+            this.setViewsDisplayStyle(this.isRaml(editor));
+        }
         
         if(!editor || editor == this.currentEditor || !this.isRaml(editor)) {
             return;
