@@ -27,3 +27,11 @@ export function ast(editor:AtomCore.IEditor):rp.IHighLevelNode{
     var ast=<rp.IHighLevelNode>unit.highLevel();
     return ast;
 }
+
+export function toggleEditorTools(): void {
+    var man = editorTools.aquireManager();
+    
+    if(man){
+        man.getCurrentEditor();
+    }
+}

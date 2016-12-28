@@ -1,75 +1,66 @@
 /// <reference path="../../../typings/main.d.ts" />
+import fs = require('fs');
+import path = require('path');
 
-import fs = require ('fs')
-import path = require ('path')
-import rp=require("raml-1-parser")
-import hl=rp.hl;
-import utils=rp.utils;
-import rr=rp.utils;
-import unitUtils = require("../util/unit")
+import parser = require("raml-1-parser");
 
-import _=require("underscore")
-var TextBuffer=require("basarat-text-buffer")
-import editorManager=require("./editorManager")
-import editorTools=require("../editor-tools/editor-tools")
-export var grammarScopes= ['source.raml']
-export var scope= 'file'
-export var lintOnFly= true;
-var lintersToDestroy = [];
-var linterApiProxy:any={};
+import parserUtils = parser.utils;
 
-export var relint = function (editor:AtomCore.IEditor)  {
+import unitUtils = require("../util/unit");
+
+var TextBuffer = require("basarat-text-buffer");
+
+import editorManager = require("./editorManager");
+import editorTools = require("../editor-tools/editor-tools");
+
+export var grammarScopes = ['source.raml'];
+
+export var scope = 'file';
+
+export var lintOnFly = true;
+
+import taskManager = require("./taskManager");
+
+export function relint(editor:AtomCore.IEditor) {
+    Promise.resolve("").then(editorManager.toggleEditorTools);
+}
+
+function lintFirstTime(linterApi: any, editor: AtomCore.IEditor) {
     var editorPath = editor.getPath && editor.getPath();
 
     var extName = editorPath && path.extname(editorPath);
 
     var lowerCase = extName && extName.toLowerCase();
 
-    var linter = linterApiProxy.getEditorLinter(editor);
-    lintersToDestroy.push(linter);
-
     if(lowerCase === '.raml' || lowerCase === '.yaml' ) {
-        var res=lint(editor);
+        var linter = linterApi.getEditorLinter(editor);
 
-        if(!rr.hasAsyncRequests()) {
-            linterApiProxy.setMessages(linter, res);
-        }
+        lint(editor).then(messages => {
+            linterApi.setMessages(linter, messages);
 
-        setupLinterCallback(editor, () => linterApiProxy.deleteMessages(linter));
+            var linterDestroyer = editor.onDidChange(() => {
+                destroyLinter(linterApi, linter);
 
-        linter.onDidDestroy(() => {
-            removeLinterCallback(editor);
-        });
-
-        editor.onDidDestroy(() => {
-            destroyLinter(linterApiProxy, linter);
+                linterDestroyer.dispose();
+            });
         });
     }
 }
 
-function relintLater(editor: any) {
-    Promise.resolve(editor).then(editor => {
-        relint(editor);
-    });
-}
-
 export function initEditorObservers(linterApi) {
-    linterApiProxy=linterApi;
-    rr.addLoadCallback(x => {
-        atom.workspace.getTextEditors().forEach(x=>relintLater(x));
-
+    parserUtils.addLoadCallback(x => {
         var manager = editorTools.aquireManager();
 
         if(manager) {
             manager.updateDetails();
         }
-    })
-    atom.workspace.observeTextEditors(relintLater);
+    });
+
+    atom.workspace.observeTextEditors(editor => lintFirstTime(linterApi, editor));
+
     return {
         dispose: () => {
-            lintersToDestroy.forEach(linter => {
-                destroyLinter(linterApi, linter);
-            })
+            
         }
     }
 }
@@ -78,32 +69,6 @@ function destroyLinter(linterApi, linter) {
     linterApi.deleteMessages(linter);
 
     linterApi.deleteLinter(linter);
-};
-
-function setupLinterCallback(editor, callback) {
-    editor.linterCallback = callback;
-}
-
-function removeLinterCallback(editor) {
-    editor.linterCallback = null;
-}
-
-function execLinterCallback(editor) {
-    if(editor.linterCallback) {
-        editor.linterCallback();
-        removeLinterCallback(editor);
-    }
-}
-
-
-export function lint(textEditor:AtomCore.IEditor) {
-    var result = actualLint(textEditor);
-
-    if(rr.hasAsyncRequests()) {
-        return [];
-    }
-
-    return result;
 }
 
 function isRAMLUnit(editor) {
@@ -141,152 +106,142 @@ var combErrors = function (result:any[]) {
     }
     return rs;
 };
-function actualLint(textEditor:AtomCore.IEditor) {
-    execLinterCallback(textEditor);
 
-    if(rr.hasAsyncRequests()) {
-        return [];
-    }
+function tabWarnings(textEditor:AtomCore.IEditor): any[] {
+    var result: any[] = [];
 
-    if (!isRAMLUnit(textEditor)) return [];
+    var text = textEditor.getBuffer().getText();
 
-    var l=new Date().getTime();
-    var astNode=editorManager.ast(textEditor);
-    if (astNode==null){
-        return [];
-    }
-    var result:any[]=[];
-    var acceptor=new Acceptor(textEditor, result, astNode.root());
-    var c=astNode.lowLevel() ? astNode.lowLevel().unit().contents() : "";
-    var tab=0;
-    while (true) {
-        var tab:number = c.indexOf('\t',tab)
-        if (tab != -1) {
+    var tab = 0;
+
+    while(true) {
+        var tab: number = text.indexOf('\t',tab);
+
+        if(tab != -1) {
             var p1 = textEditor.getBuffer().positionForCharacterIndex(tab);
             var p2 = textEditor.getBuffer().positionForCharacterIndex(tab + 1);
-            var t = "Using tabs  can lead to unpredictable results";
+
             var message = {
                 type: ("Warning"),
+
                 filePath: textEditor.getPath(),
-                text: t,
+
+                text: "Using tabs  can lead to unpredictable results",
+
                 trace: [],
+
                 range: [[p1.row, p1.column], [p2.row, p2.column]]
-            }
+            };
+
             result.push(message);
+
             tab++;
         }
         else{
             break;
         }
     }
-    if (!astNode.lowLevel()){
-        return [];
+
+    return result;
+}
+
+function postPocessError(editor, error, buffers) {
+    var editorPath = editor.getPath();
+
+    if(!buffers[editorPath]) {
+        buffers[editorPath] = editor.getBuffer();
     }
 
-    gatherValidationErrors(astNode,result,textEditor);
+    return Promise.resolve(error).then(error => {
+        if(!error.filePath) {
+            error.filePath = editorPath;
+        }
 
-    var l1=new Date().getTime();
-    var rs = combErrors(result);
-    if (editorTools.aquireManager()) {
-        if (editorTools.aquireManager().performanceDebug) {
-            console.log("Linting took:" + (l1 - l))
+        var buffer = buffers[error.filePath];
+
+        if(!buffer) {
+            return new Promise((resolve, reject) => {
+                fs.readFile(error.filePath, (err: any, data: any) => {
+                    if(err) {
+                        reject(err);
+                    } else {
+                        buffer = new TextBuffer(data.toString());
+
+                        buffers[error.filePath] = buffer;
+
+                        resolve(buffer);
+                    }
+                });
+            });
         }
-    }
-    
-    var warnings = 0;
-    
-    return rs.filter(x => {
-        return x;
-    })
-        .filter(x => {
-        if(x.type === "Warning") {
-            if(warnings >= 20) {
-                return false;
-            }
-            
-            warnings++;
-        }
+
+        return buffer;
+    }).then(buffer => {
+        var p1 = buffer.positionForCharacterIndex(error.range[0]);
+        var p2 = buffer.positionForCharacterIndex(error.range[1]);
+
+        error.range = [[p1.row, p1.column], [p2.row, p2.column]];
         
-        return x;
+        var traceErrors = error.trace || [];
+        
+        var tracePromises = traceErrors.map(traceError => postPocessError(editor, traceError, buffers));
+
+        return Promise.all(tracePromises).then(trace => {
+            error.trace = trace;
+            
+            return error;
+        });
     });
 }
-class Acceptor extends utils.PointOfViewValidationAcceptorImpl{
 
-    constructor(private editor:AtomCore.IEditor, errors:any[],
-                primaryUnit : hl.IParseResult){
-        super(errors, primaryUnit)
-    }
-    buffers:{[path:string]:any}={}
-
-    accept(issue:hl.ValidationIssue) {
-        if (!issue){
-            return;
-        }
-
-        this.transformIssue(issue);
-
-        var issueType = issue.isWarning?"Warning":'Error';
-        var issuesArray:hl.ValidationIssue[] = [];
-        while(issue){
-            issuesArray.push(issue);
-            if(issue.extras && issue.extras.length>0){
-                issue = issue.extras[0];
-            }
-            else{
-                issue = null;
-            }
-        }        
-        var issues = issuesArray.reverse().map(x=>{
-            var result = this.convertParserIssue(x,issueType);
-            issueType = "Trace";
-            return result;
-        });
-        for(var i = 0 ; i < issues.length-1; i++){
-            issues[0].trace.push(issues[i+1]);
-        }
-        var message = issues[0];
-        this.errors.push(message);
-    }
-
-    private convertParserIssue(x:hl.ValidationIssue,iType:string):any {
-        var t = x.message;
-        var buf = this.editor.getBuffer();
-        var ps = x.path;
-        if (x.unit) {
-            ps = x.unit.absolutePath();
-        }
-        if (ps) {
-            if (this.buffers[ps]) {
-                buf = this.buffers[ps];
-            }
-            else {
-                buf = new TextBuffer(x.unit.contents());
-                this.buffers[ps] = buf;
-
-            }
-        }
-        var p1 = buf.positionForCharacterIndex(x.start);
-        var p2 = buf.positionForCharacterIndex(x.end);
-
-        var trace = {
-            type: iType,
-            filePath: x.path ? ps : this.editor.getPath(),
-            text: t,
-            range: [[p1.row, p1.column], [p2.row, p2.column]],
-            trace: [],
-        };
-        return trace;
-    }
-
-    acceptUnique(issue:hl.ValidationIssue){
-        this.accept(issue);
-    }
-
-    end() {
-    }
+function getEditorId(textEditor): string {
+    return textEditor.id;
 }
-function gatherValidationErrors(astNode:hl.IParseResult,errors:any[],editor:AtomCore.IEditor){
-    if (astNode) {
-        astNode.validate(new Acceptor(editor,errors, astNode.root()))
+
+function runValidationSheduleUpdater(textEditor: AtomCore.IEditor, resolve, reject) {
+    var sheduler = textEditor.onDidChange(() => {
+        taskManager.sheduleTask(new taskManager.ValidationTask(textEditor.getPath(), textEditor.getBuffer().getText(), errors => {
+            sheduler.dispose();
+
+            resolve(errors);
+        }, getEditorId(textEditor)));
+    });
+
+    taskManager.sheduleTask(new taskManager.ValidationTask(textEditor.getPath(), textEditor.getBuffer().getText(), errors => {
+        sheduler.dispose();
+
+        resolve(errors);
+    }, getEditorId(textEditor)));
+}
+
+export function lint(textEditor: AtomCore.IEditor): Promise<any[]> {
+    if(!isRAMLUnit(textEditor)) {
+        return Promise.resolve([]);
     }
+    
+    Promise.resolve("").then(editorManager.toggleEditorTools);
+    
+    var promise = new Promise((resolve, reject) => {
+        runValidationSheduleUpdater(textEditor, resolve, reject);
+    }).then((errors: any[]) => {
+        var buffers = {};
+        
+        var promises = errors.map(error => postPocessError(textEditor, error, buffers));
+
+        var tabs: any[] = tabWarnings(textEditor);
+
+        promises = promises.concat(tabs);
+        
+        return Promise.all(promises).then((errors: any[]) => {
+            var result = combErrors(errors);
+
+            var warnings = 0;
+            
+            return result.filter(error => error ? true : false).filter(error => {
+                return error.type === 'Warning' && warnings++ >= 20 ? false : true;
+            });
+        });
+    });
+    
+    return promise;
 }
