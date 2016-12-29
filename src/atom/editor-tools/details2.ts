@@ -1202,6 +1202,12 @@ export function buildItem(node:hl.IHighLevelNode,dialog:boolean){
             return false;
         }
 
+        if(node.definition() && node.definition().isAssignableFrom(universe.Universe10.ExampleSpec.name) && !universehelpers.isNameProperty(x)) {
+            if(node.attrValue('value') === null) {
+                return false;
+            }
+        }
+
         return true;
     })
     props=props.sort((x,y)=> {
