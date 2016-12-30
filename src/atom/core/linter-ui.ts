@@ -6,6 +6,7 @@ import rp=require("raml-1-parser")
 import hl=rp.hl;
 import utils=rp.utils;
 import rr=rp.utils;
+import unitUtils = require("../util/unit")
 
 import _=require("underscore")
 var TextBuffer=require("basarat-text-buffer")
@@ -32,8 +33,6 @@ export var relint = function (editor:AtomCore.IEditor)  {
 
         if(!rr.hasAsyncRequests()) {
             linterApiProxy.setMessages(linter, res);
-
-            console.log("Messages: " + res.length);
         }
 
         setupLinterCallback(editor, () => linterApiProxy.deleteMessages(linter));
@@ -47,10 +46,17 @@ export var relint = function (editor:AtomCore.IEditor)  {
         });
     }
 }
+
+function relintLater(editor: any) {
+    Promise.resolve(editor).then(editor => {
+        relint(editor);
+    });
+}
+
 export function initEditorObservers(linterApi) {
     linterApiProxy=linterApi;
     rr.addLoadCallback(x => {
-        atom.workspace.getTextEditors().forEach(x=>relint(x));
+        atom.workspace.getTextEditors().forEach(x=>relintLater(x));
 
         var manager = editorTools.aquireManager();
 
@@ -58,7 +64,7 @@ export function initEditorObservers(linterApi) {
             manager.updateDetails();
         }
     })
-    atom.workspace.observeTextEditors(relint);
+    atom.workspace.observeTextEditors(relintLater);
     return {
         dispose: () => {
             lintersToDestroy.forEach(linter => {
@@ -103,7 +109,7 @@ export function lint(textEditor:AtomCore.IEditor) {
 function isRAMLUnit(editor) {
     var contents = editor.getBuffer().getText();
 
-    return contents.match(/^\s*#%RAML\s+(\d\.\d)\s*(\w*)\s*$/m);
+    return unitUtils.isRAMLUnit(contents)
 }
 
 var combErrors = function (result:any[]) {

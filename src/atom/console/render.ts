@@ -1524,6 +1524,19 @@ class EditParameters extends PureComponent<EditParametersProps, {}> {
         var name = parameter.name()
         var input: React.ReactElement<any>
         var value = values[name]
+
+        if(!value && value !== '') {
+          var param = <any>parameter;
+          
+          if(param && param._node && param._node._prop && param._node._prop._groupName === rp.universes.Universe10.Api.properties.baseUriParameters.name) {
+            if(name === rp.universes.Universe10.Api.properties.version.name) {
+              values[name] = param._node.root().wrapperNode().version();
+            }
+          }
+
+          var value = values[name];
+        }
+
         var label = this.props.prefix == null ? name : `${this.props.prefix}: ${name}`
 
         input = React.createElement(<any> TextEditor, {

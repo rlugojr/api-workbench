@@ -417,7 +417,7 @@ class TopLevelNode extends Category{
                 if (error.extras&&error.extras.length>0){
                     error=error.extras[0];
                 }
-                var item=this.item(error.node.name());
+                var item = error.node && this.item(error.node.name());
                 if (item){
                     item.setError(error.message);
                 }
@@ -760,7 +760,7 @@ class MarkdownFieldUI extends UI.AtomEditorElement implements UI.IField<any>{
         this.setStyle("border-radius","2px");
         this.setStyle("font-size","1.15em")
         this.setStyle("border-color","rgba(0,0,0,0.2)");
-        this.setGrammar('source.gfm');
+        this.setGrammar('source.mdcustom');
     }
 
     setLabelWidth(){
@@ -1202,6 +1202,12 @@ export function buildItem(node:hl.IHighLevelNode,dialog:boolean){
             return false;
         }
 
+        if(node.definition() && node.definition().isAssignableFrom(universe.Universe10.ExampleSpec.name) && !universehelpers.isNameProperty(x)) {
+            if(node.attrValue('value') === null) {
+                return false;
+            }
+        }
+
         return true;
     })
     props=props.sort((x,y)=> {
@@ -1242,7 +1248,7 @@ export function buildItem(node:hl.IHighLevelNode,dialog:boolean){
             //     return;
             // }
             var nm=node.attr(x.nameId());
-            if (nm && typeof nm.value() ==="object"){
+            if (nm && typeof nm.value() === "object" && nm.value() !== null) {
                 result.addItemToCategory(category(x,node), new StructuredField(x, node,<hl.IStructuredValue>nm.value()));
                 return;
             }
