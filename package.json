@@ -67,7 +67,7 @@
     "xmldom": "0.1.19",
     "xmlhttprequest": "^1.7.0",
     "xtend": "^4.0.1",
-    "yaml-ast-parser": "0.0.30",
+    "yaml-ast-parser": "0.0.31",
     "raml-1-parser": "1.1.11",
     "raml-suggestions": "0.0.24",
     "raml-actions" : "0.0.11"
