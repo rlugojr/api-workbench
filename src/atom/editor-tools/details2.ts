@@ -1248,7 +1248,7 @@ export function buildItem(node:hl.IHighLevelNode,dialog:boolean){
             //     return;
             // }
             var nm=node.attr(x.nameId());
-            if (nm && typeof nm.value() ==="object"){
+            if (nm && typeof nm.value() === "object" && nm.value() !== null) {
                 result.addItemToCategory(category(x,node), new StructuredField(x, node,<hl.IStructuredValue>nm.value()));
                 return;
             }
