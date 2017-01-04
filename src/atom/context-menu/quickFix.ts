@@ -619,6 +619,14 @@ class ExtractLibraryStateCalculator extends contextActions.CommonASTStateCalcula
         var generalState = this.getGeneralState();
         if (!generalState) return null;
 
+        if (generalState.node.isElement()) {
+            if (universeHelpers.isRAML08Node(generalState.node.asElement())) return null;
+        }
+
+        if (generalState.node.isAttr()) {
+            if (universeHelpers.isRAML08Attribute(generalState.node.asAttr())) return null;
+        }
+
         var current = generalState.node;
         while (current.parent() != null) {
             current = current.parent()
