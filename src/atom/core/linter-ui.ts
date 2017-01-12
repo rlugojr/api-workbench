@@ -19,7 +19,7 @@ export var scope = 'file';
 
 export var lintOnFly = true;
 
-import taskManager = require("./taskManager");
+import taskManager = require("workbenchassistant");
 
 export function relint(editor:AtomCore.IEditor) {
     Promise.resolve("").then(editorManager.toggleEditorTools);
