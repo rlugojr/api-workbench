@@ -544,13 +544,23 @@ class MoveContentStateCalculator extends contextActions.CommonASTStateCalculator
 
 class ConvertJsonSchemaToTypeStateCalculator extends contextActions.CommonASTStateCalculator {
     calculate():any {
-        var generalState = this.getGeneralState()
+        var generalState = this.getGeneralState();
         if (!generalState) return null
+
+        
         var highLevelNode = <hl.IHighLevelNode>generalState.node;
         //console.log('definition: ' + highLevelNode.definition().name() + '; ' + generalState.completionKind);
         if (generalState.completionKind != search.LocationKind.KEY_COMPLETION
             && generalState.completionKind != search.LocationKind.VALUE_COMPLETION)
             return null;
+
+        if (generalState.node.isElement()) {
+            if (universeHelpers.isRAML08Node(generalState.node.asElement())) return null;
+        }
+
+        if (generalState.node.isAttr()) {
+            if (universeHelpers.isRAML08Attribute(generalState.node.asAttr())) return null;
+        }
 
         var attr = _.find(highLevelNode.attrs(),
             x=>x.lowLevel().start() < generalState.offset && x.lowLevel().end() >= generalState.offset && !x.property().getAdapter(def.RAMLPropertyService).isKey());
@@ -618,6 +628,14 @@ class ExtractLibraryStateCalculator extends contextActions.CommonASTStateCalcula
 
         var generalState = this.getGeneralState();
         if (!generalState) return null;
+
+        if (generalState.node.isElement()) {
+            if (universeHelpers.isRAML08Node(generalState.node.asElement())) return null;
+        }
+
+        if (generalState.node.isAttr()) {
+            if (universeHelpers.isRAML08Attribute(generalState.node.asAttr())) return null;
+        }
 
         var current = generalState.node;
         while (current.parent() != null) {
