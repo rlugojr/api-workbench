@@ -833,7 +833,7 @@ class TypeInfo extends PureComponent<{ node: RamlWrapper1.TypeDeclaration }, {}>
       typeof node.type === 'function' ? React.createElement(
         Block,
         null,
-        node.type().map(type => {
+          (node.type() || []).map(type => {
           return React.createElement('span', {
             key: type,
             className: 'highlight',

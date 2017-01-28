@@ -405,7 +405,7 @@ export class RAMLConsoleView extends SpacePenViews.ScrollView {
       methodHeaders = methodHeaders.concat(securityScheme.describedBy().headers())
     }
 
-    this.request = popsicle.request({
+    var requestOptions: any = {
       url: url + path,
       method: node.method(),
       headers: extend<any>({ 'User-Agent': 'API Workbench: Console' }, this.usedParameters(this.state.headers, methodHeaders)),
@@ -416,7 +416,13 @@ export class RAMLConsoleView extends SpacePenViews.ScrollView {
         popsicle.plugins.unzip(),
         popsicle.plugins.concatStream('string')
       ]
-    })
+    }
+
+    if(requestOptions.headers && !requestOptions.headers['Content-Type']) {
+      requestOptions.headers['Content-Type'] = this.state.body;
+    }
+
+    this.request = popsicle.request(requestOptions);
 
     this.request.progress(() => {
       this.setPageState({ requestProgress: this.request.completed })

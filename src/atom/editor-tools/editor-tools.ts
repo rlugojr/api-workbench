@@ -478,6 +478,6 @@ export function doSplit(value:any,dir:SplitDirections=SplitDirections.RIGHT){
             newPane=atom.workspace.getActivePane().splitRight({});
             break;
     }
-    newPane.addItem(value,0)
+    newPane.addItem(value)
     return newPane;
 }
