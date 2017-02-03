@@ -708,7 +708,7 @@ export function findUsagesImpl(f:(x:hl.IHighLevelNode,t:hl.IParseResult[])=>any=
             unit.updateContent(text);
             var decl=search.findUsages(unit,offset);
             if (decl.node) {
-                f(decl.node, decl.results);
+                f(decl.node, _.filter(decl.results, result => (result && result.parent && result.parent() !== decl.node)));
             }
         }
     }
