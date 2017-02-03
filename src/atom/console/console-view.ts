@@ -418,7 +418,7 @@ export class RAMLConsoleView extends SpacePenViews.ScrollView {
       ]
     }
 
-    if(requestOptions.headers && !requestOptions.headers['Content-Type']) {
+    if(this.state.body && requestOptions.headers && !requestOptions.headers['Content-Type']) {
       requestOptions.headers['Content-Type'] = this.state.body;
     }
 
