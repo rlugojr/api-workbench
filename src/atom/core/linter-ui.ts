@@ -19,7 +19,10 @@ export var scope = 'file';
 
 export var lintOnFly = true;
 
-import taskManager = require("workbenchassistant");
+import {
+    getNodeClientConnection
+} from 'api-workbench-server'
+import {IValidationReport} from "api-workbench-server/dist";
 
 export function relint(editor:AtomCore.IEditor) {
     Promise.resolve("").then(editorManager.toggleEditorTools);
@@ -177,10 +180,19 @@ function postPocessError(editor, error, buffers) {
 
         return buffer;
     }).then(buffer => {
-        var p1 = buffer.positionForCharacterIndex(error.range[0]);
-        var p2 = buffer.positionForCharacterIndex(error.range[1]);
+        console.log("Linter-ui:postPocessError Converting an error with range: [" + error.range.start + " , " + error.range.end + "]")
 
-        error.range = [[p1.row, p1.column], [p2.row, p2.column]];
+        if (error.range.start != null && error.range.end != null) {
+
+            console.log("Linter-ui:postPocessError Converting an error with range as array: [" + error.range[0] + " , " + error.range[1] + "]")
+
+            var p1 = buffer.positionForCharacterIndex(error.range.start);
+            var p2 = buffer.positionForCharacterIndex(error.range.end);
+
+            console.log("Linter-ui:postPocessError Result error range: [" + p1.row + " , " + p1.column + "] ; ["+ p2.row + " , " + p2.column + "]")
+
+            error.range = [[p1.row, p1.column], [p2.row, p2.column]];
+        }
         
         var traceErrors = error.trace || [];
         
@@ -198,20 +210,51 @@ function getEditorId(textEditor): string {
     return textEditor.id;
 }
 
-function runValidationSheduleUpdater(textEditor: AtomCore.IEditor, resolve, reject) {
-    var sheduler = textEditor.onDidChange(() => {
-        taskManager.sheduleTask(new taskManager.ValidationTask(textEditor.getPath(), textEditor.getBuffer().getText(), errors => {
-            sheduler.dispose();
+class ValidationReportExpected {
+    public uri : string
+    public resolve : {(result:any):void}
+    public reject : {(error:any):void}
+}
 
-            resolve(errors);
-        }, getEditorId(textEditor)));
+var expectedValidationReports : ValidationReportExpected[] = [];
+
+function findAndRemoveExpectedReports(uri : string) : ValidationReportExpected[] {
+    let result : ValidationReportExpected[] = [];
+
+    expectedValidationReports = expectedValidationReports.filter(reportExpected=>{
+        if (reportExpected.uri == uri) {
+            result.push(reportExpected);
+            return false;
+        }
+        return true;
     });
 
-    taskManager.sheduleTask(new taskManager.ValidationTask(textEditor.getPath(), textEditor.getBuffer().getText(), errors => {
-        sheduler.dispose();
+    return result;
+}
 
-        resolve(errors);
-    }, getEditorId(textEditor)));
+let clientConnection = getNodeClientConnection();
+clientConnection.onValidationReport((report: IValidationReport)=>{
+    console.log("Linter-ui:onValidationReport Recieved validation report")
+    let expectedReports = findAndRemoveExpectedReports(report.pointOfViewUri);
+    console.log("Linter-ui:onValidationReport Found expected reports: " + expectedReports.length)
+
+    for (let expectedReport of expectedReports) {
+        expectedReport.resolve(report.issues);
+    }
+});
+
+function runValidationSheduleUpdater(textEditor: AtomCore.IEditor, resolve, reject) : void {
+    let uri = textEditor.getPath();
+    expectedValidationReports.push({
+       uri: uri,
+       resolve : resolve,
+       reject: reject
+    });
+
+    clientConnection.documentChanged({
+        uri : uri,
+        text: textEditor.getBuffer().getText()
+    });
 }
 
 export function lint(textEditor: AtomCore.IEditor): Promise<any[]> {
