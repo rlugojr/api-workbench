@@ -20,9 +20,9 @@ export var scope = 'file';
 export var lintOnFly = true;
 
 import {
-    getNodeClientConnection
-} from 'api-workbench-server'
-import {IValidationReport} from "api-workbench-server/dist";
+    getNodeClientConnection,
+    IValidationReport
+} from 'raml-language-server'
 
 export function relint(editor:AtomCore.IEditor) {
     Promise.resolve("").then(editorManager.toggleEditorTools);
