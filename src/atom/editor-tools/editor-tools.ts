@@ -3,13 +3,13 @@ import path=require('path')
 import Disposable = UI.IDisposable
 import CompositeDisposable = UI.CompositeDisposable
 import atom = require('../core/atomWrapper');
-import rp=require("raml-1-parser")
-import hl=rp.hl;
-import ll=rp.ll;
-import project=rp.project;
+// import rp=require("raml-1-parser")
+// import hl=rp.hl;
+// import ll=rp.ll;
+// import project=rp.project;
 import _=require("underscore")
 import pair = require("../../util/pair");
-import detailsView=require("./details-view")
+// import detailsView=require("./details-view")
 import outlineView=require("./outline-view")
 import UI=require("atom-ui-lib")
 var _bmc : number = 0;
@@ -41,10 +41,11 @@ class EditorManager{
     private currentEditor:any;
 
     _view: outlineView.RamlOutline;
-    _details: detailsView.RamlDetails;
+    //_details: detailsView.RamlDetails;
 
-    ast: hl.IHighLevelNode;
-    unit: ll.ICompilationUnit;
+    // ast: hl.IHighLevelNode;
+    unitPath : string;
+    // unit: ll.ICompilationUnit;
 
     changing: boolean;
     executingCommand: boolean;
@@ -107,13 +108,13 @@ class EditorManager{
                     return e['softTabs'] != undefined;
                 }).length;
                 if (edcount == 0) {
-                    this.ast=null;
-                    this.unit=null;
-                    this._currentNode=null;
+                    // this.ast=null;
+                    // this.unit=null;
+                    // this._currentNode=null;
                     this.currentEditor=null;
                     global.cleanCache();
                     if (atom.workspace.paneForItem(this._view)) atom.workspace.paneForItem(this._view).destroy();
-                    if (atom.workspace.paneForItem(this._details)) atom.workspace.paneForItem(this._details).destroy();
+                    // if (atom.workspace.paneForItem(this._details)) atom.workspace.paneForItem(this._details).destroy();
                     this.opened = false;
                 }
             } catch (e) {
@@ -126,20 +127,23 @@ class EditorManager{
     private getOrCreateView() {
         if (!this._view) {
             this._view = new outlineView.RamlOutline();
-            if (this.ast){
-                this._view.setUnit(this.ast);
+            if (this.unitPath){
+                 this._view.setUnit(this.unitPath);
             }
+            // if (this.ast){
+            //     this._view.setUnit(this.ast);
+            // }
         }
         return this._view;
     }
 
-    private getDetails() {
-        if (!this._details) this._details = new detailsView.RamlDetails();
-        return this._details;
-    }
+    // private getDetails() {
+    //     if (!this._details) this._details = new detailsView.RamlDetails();
+    //     return this._details;
+    // }
 
     updateDetails() {
-        this.getDetails().update();
+        // this.getDetails().update();
     }
 
     reparseAST() {
@@ -147,29 +151,30 @@ class EditorManager{
             var _path = this.currentEditor.getPath();
             var bf=this.currentEditor.getBuffer();
 
-            var prj = project.createProject(path.dirname(_path));
-            var unit = prj.setCachedUnitContent(path.basename(_path), this.currentEditor.getBuffer().getText());
-
-            unit.project().addTextChangeListener(delta=>{
-                if (delta.unit!=unit){
-                    return;
-                }
-                var cm=delta.offset;
-                var end=delta.replacementLength;
-                var text=delta.text;
-                var buffer=(<atom.IBuffer>this.currentEditor.getBuffer());
-                var start=buffer.positionForCharacterIndex(cm);
-                var endPosition=buffer.positionForCharacterIndex(cm+end);
-                try {
-                    this.fire=false;
-                    (<any>buffer).setTextInRange({start: start, end: endPosition}, text);
-                    this.scheduleOutlineUpdate();
-                } finally{
-                    this.fire=true;
-                }
-            });
-            this.ast = unit.highLevel();
-            this.unit = unit;
+            this.unitPath = _path;
+            // var prj = project.createProject(path.dirname(_path));
+            // var unit = prj.setCachedUnitContent(path.basename(_path), this.currentEditor.getBuffer().getText());
+            //
+            // unit.project().addTextChangeListener(delta=>{
+            //     if (delta.unit!=unit){
+            //         return;
+            //     }
+            //     var cm=delta.offset;
+            //     var end=delta.replacementLength;
+            //     var text=delta.text;
+            //     var buffer=(<atom.IBuffer>this.currentEditor.getBuffer());
+            //     var start=buffer.positionForCharacterIndex(cm);
+            //     var endPosition=buffer.positionForCharacterIndex(cm+end);
+            //     try {
+            //         this.fire=false;
+            //         (<any>buffer).setTextInRange({start: start, end: endPosition}, text);
+            //         this.scheduleOutlineUpdate();
+            //     } finally{
+            //         this.fire=true;
+            //     }
+            // });
+            // this.ast = unit.highLevel();
+            // this.unit = unit;
         }
     }
 
@@ -179,7 +184,7 @@ class EditorManager{
            return;
        }
        var items = pane.getItems();
-       return (items.indexOf(this.getDetails()) >= 0 || items.indexOf(this._view) >= 0);
+       return (/*items.indexOf(this.getDetails()) >= 0 || */items.indexOf(this._view) >= 0);
     }
 
     display() {
@@ -189,36 +194,36 @@ class EditorManager{
         if (!fpane) return;
         if (!aw.paneForItem(this.getOrCreateView()))
             doSplit(this.getOrCreateView());
-        if (!aw.paneForItem(manager.getDetails()))
-            doSplit(this.getDetails(), SplitDirections.BOTTOM);
+        // if (!aw.paneForItem(manager.getDetails()))
+        //     doSplit(this.getDetails(), SplitDirections.BOTTOM);
 
         this.opened = true;
     }
 
     fire: boolean = true;
 
-    updateText(node?: ll.ILowLevelASTNode) {
-        this.fire = false;
-        var editor = this.currentEditor;
-        var pos = node ? editor.getBuffer().positionForCharacterIndex(node.start()) : null;
-        editor.setText(this.unit.contents());
-        this.fire = true;
-        if (pos) (<any>editor).setCursorBufferPosition(pos);
-    }
+    // updateText(node?: ll.ILowLevelASTNode) {
+    //     this.fire = false;
+    //     var editor = this.currentEditor;
+    //     var pos = node ? editor.getBuffer().positionForCharacterIndex(node.start()) : null;
+    //     editor.setText(this.unit.contents());
+    //     this.fire = true;
+    //     if (pos) (<any>editor).setCursorBufferPosition(pos);
+    // }
 
-    selectNode(hnode: hl.IHighLevelNode) {
-        var node = hnode.lowLevel();
-        if (!node) return;
-        var editor = this.currentEditor;
-        if (!editor) return;
-        var pos = node ? editor.getBuffer().positionForCharacterIndex(node.start()) : null;
-        if (pos) (<any>editor).setCursorBufferPosition(pos);
-    }
+    // selectNode(hnode: hl.IHighLevelNode) {
+    //     var node = hnode.lowLevel();
+    //     if (!node) return;
+    //     var editor = this.currentEditor;
+    //     if (!editor) return;
+    //     var pos = node ? editor.getBuffer().positionForCharacterIndex(node.start()) : null;
+    //     if (pos) (<any>editor).setCursorBufferPosition(pos);
+    // }
     
     private setViewsDisplayStyle(visible: boolean) {
-        if(this._details && (<any>this)._details.element) {
-            (<any>this)._details.element.style.display = visible ? null : "none";
-        }
+        // if(this._details && (<any>this)._details.element) {
+        //     (<any>this)._details.element.style.display = visible ? null : "none";
+        // }
 
         if(this._view && (<any>this)._view.element) {
             (<any>this)._view.element.style.display = visible ? null : "none";
@@ -304,7 +309,7 @@ class EditorManager{
     private addListenersOnMove(cedit) {
         var movingPane=false;
         atom.workspace.onDidAddPaneItem(event=> {
-            if (movingPane || this.isETPane(event.pane) == false || event.item == this.getOrCreateView() || event.item == this.getDetails()) return event;
+            if (movingPane || this.isETPane(event.pane) == false || event.item == this.getOrCreateView() /*|| event.item == this.getDetails()*/) return event;
             setTimeout(()=> {
                 try {
                     var fpane = atom.workspace.paneForItem(cedit);
@@ -327,60 +332,60 @@ class EditorManager{
     opened: boolean = false;
 
     currentPosition: number;
-    _currentNode: hl.IHighLevelNode;
-    //_selectedNode: hl.IHighLevelNode;
+    // _currentNode: hl.IHighLevelNode;
+    // //_selectedNode: hl.IHighLevelNode;
 
-    patchCurrentNode(n:hl.IHighLevelNode){
-        this._currentNode=n;
-    }
+    // patchCurrentNode(n:hl.IHighLevelNode){
+    //     this._currentNode=n;
+    // }
+    //
+    // getCurrentNode() {
+    //     if (this._currentNode == null) return this._currentNode = this.ast;
+    //     else return this._currentNode;
+    // }
 
-    getCurrentNode() {
-        if (this._currentNode == null) return this._currentNode = this.ast;
-        else return this._currentNode;
-    }
 
+    // setSelectedNode(node: hl.IHighLevelNode) {
+    //     //this._selectedNode = node;
+    //
+    //     if (this.unit){
+    //         var unitPath=this.unit.absolutePath();
+    //         while (node.lowLevel().unit().absolutePath()!=unitPath){
+    //             if (!node.parent()){
+    //                 break;
+    //             }
+    //             else{
+    //                 node=node.parent();
+    //             }
+    //         }
+    //     }
+    //     var id=node.id();
+    //     var anode=this.ast.findById(id);
+    //     if (anode){
+    //         node=anode;
+    //     }
+    //     if (this._details){
+    //         this._details.show(node);
+    //     }
+    //     var editor = this.getCurrentEditor();
+    //     if (editor) {
+    //         this.fire=false;
+    //         try {
+    //             var buffer = editor.getBuffer();
+    //             var posStart = buffer.positionForCharacterIndex(node.lowLevel().start());
+    //             var posEnd = buffer.positionForCharacterIndex(node.lowLevel().end());
+    //             editor.setCursorBufferPosition(posStart);
+    //             this.positionUpdated(buffer.characterIndexForPosition(editor.getCursorBufferPosition()));
+    //         }finally{
+    //             this.fire=true;
+    //         }
+    //     }
+    // }
 
-    setSelectedNode(node: hl.IHighLevelNode) {
-        //this._selectedNode = node;
-
-        if (this.unit){
-            var unitPath=this.unit.absolutePath();
-            while (node.lowLevel().unit().absolutePath()!=unitPath){
-                if (!node.parent()){
-                    break;
-                }
-                else{
-                    node=node.parent();
-                }
-            }
-        }
-        var id=node.id();
-        var anode=this.ast.findById(id);
-        if (anode){
-            node=anode;
-        }
-        if (this._details){
-            this._details.show(node);
-        }
-        var editor = this.getCurrentEditor();
-        if (editor) {
-            this.fire=false;
-            try {
-                var buffer = editor.getBuffer();
-                var posStart = buffer.positionForCharacterIndex(node.lowLevel().start());
-                var posEnd = buffer.positionForCharacterIndex(node.lowLevel().end());
-                editor.setCursorBufferPosition(posStart);
-                this.positionUpdated(buffer.characterIndexForPosition(editor.getCursorBufferPosition()));
-            }finally{
-                this.fire=true;
-            }
-        }
-    }
-
-    getSelectedNode() {
-        return this.getCurrentNode()
-        //else return this._selectedNode;
-    }
+    // getSelectedNode() {
+    //     return this.getCurrentNode()
+    //     //else return this._selectedNode;
+    // }
 
     setText(text: string) {
         console.log("ETM::SetText");
@@ -390,14 +395,15 @@ class EditorManager{
     }
 
     updateViews() {
-        var cNode = this.getCurrentNode();
+        //var cNode = this.getCurrentNode();
         var ds=new Date().getMilliseconds();
-        if (this._details) {
-            this.getDetails().show(cNode);
-        }
+        // if (this._details) {
+        //     this.getDetails().show(cNode);
+        // }
         if (this._view) {
-            this.getOrCreateView().setUnit(manager.ast);
-            this.getOrCreateView().setSelection(cNode);
+            this.getOrCreateView().setUnit(manager.unitPath);
+            // this.getOrCreateView().setUnit(manager.ast);
+            //this.getOrCreateView().setSelection(cNode);
         }
         var d1=new Date().getMilliseconds();
         if (this.performanceDebug) {
@@ -407,12 +413,13 @@ class EditorManager{
     _cleanOutline=false;
 
     updateOutline() {
-        var cNode = this.getCurrentNode();
+        //var cNode = this.getCurrentNode();
         var ds=new Date().getMilliseconds();
 
         if (this._view) {
-            this.getOrCreateView().setUnit(manager.ast);
-            this.getOrCreateView().setSelection(cNode);
+            this.getOrCreateView().setUnit(manager.unitPath);
+            //this.getOrCreateView().setUnit(manager.ast);
+            // this.getOrCreateView().setSelection(cNode);
         }
         var d1=new Date().getMilliseconds();
         if (this.performanceDebug) {
@@ -422,9 +429,9 @@ class EditorManager{
 
     positionUpdated(newPosition) {
         this.currentPosition = newPosition;
-        if (this.ast){
-            this._currentNode=this.ast.findElementAtOffset(this.currentPosition);
-        }
+        // if (this.ast){
+        //     this._currentNode=this.ast.findElementAtOffset(this.currentPosition);
+        // }
     }
     performanceDebug=true;
 
@@ -448,13 +455,13 @@ export function aquireManager(){
     }
     return manager;
 }
-export function updateAndSelect(node:hl.IHighLevelNode){
-    if (aquireManager()._view) {
-        aquireManager()._view.refresh();
-    }
-    aquireManager().updateText();
-    aquireManager().selectNode(node);
-}
+// export function updateAndSelect(node:hl.IHighLevelNode){
+//     if (aquireManager()._view) {
+//         aquireManager()._view.refresh();
+//     }
+//     aquireManager().updateText();
+//     aquireManager().selectNode(node);
+// }
 export enum SplitDirections{
     RIGHT,
     LEFT,

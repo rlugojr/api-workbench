@@ -1,7 +1,7 @@
 /// <reference path="../../../typings/main.d.ts" />
 import path = require('path');
 import fs = require('fs');
-import docHelper=require("./documentation-utils")
+// import docHelper=require("./documentation-utils")
 import _=require("underscore")
 var emissary = require('emissary');
 var Subscriber = emissary.Subscriber;

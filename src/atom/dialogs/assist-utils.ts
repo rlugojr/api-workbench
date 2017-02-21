@@ -2,14 +2,14 @@
 
 import fs = require ('fs')
 import path = require ('path')
-import rp=require("raml-1-parser")
-import stubs=rp.stubs;
-import lowLevel=rp.ll;
-import hl=rp.hl;
+// import rp=require("raml-1-parser")
+// import stubs=rp.stubs;
+// import lowLevel=rp.ll;
+// import hl=rp.hl;
 
-import universes=rp.universes;
-
-import search=rp.search;
+// import universes=rp.universes;
+//
+// import search=rp.search;
 
 
 import _=require("underscore")
@@ -17,55 +17,55 @@ import provider=require("../suggestion/provider")
 import UI=require("atom-ui-lib")
 
 import xmlutil=require("../../util/xmlutil")
-import extract=require("./extractElementsDialog")
+// import extract=require("./extractElementsDialog")
 import shemagen=require("../../util/schemaGenerator")
 import SpacePenViews = require('atom-space-pen-views')
-import def=rp.ds
-var services=def
+// import def=rp.ds
+// var services=def
 
-import move=require("./moveElementsDialog")
+// import move=require("./moveElementsDialog")
 import tooltip=require("../core/tooltip-manager")
 import yaml = require("yaml-ast-parser")
 import linterUI = require("../core/linter-ui")
 
 import editorTools = require("../editor-tools/editor-tools")
-import {universeHelpers} from "raml-1-parser/dist/index";
+// import {universeHelpers} from "raml-1-parser/dist/index";
 
 interface QuickFix{
     title:string
     executor:()=>void
 }
-export function createGlobalSchema(attr:hl.IAttribute){
-    var r=attr.parent().root();
-    var t:def.NodeClass=<def.NodeClass>attr.property().range().universe().type("GlobalSchema");
-    var sc=stubs.createStubNode(t,(<any>t.universe().type("Api")).property("schemas"),""+attr.value());
-    sc.attrOrCreate("value").setValue("!include "+"schemas/"+attr.value()+".json")
-    r.add(sc);
-    var ed=atom.workspace.getActiveTextEditor();
-    ed.getBuffer().setText(r.lowLevel().unit().contents());
-    var sdir=path.resolve(path.dirname(ed.getPath()),"schemas");
-    if (!fs.existsSync(sdir)){
-        fs.mkdirSync(sdir);
-    }
-    var shFile=path.resolve(sdir,attr.value()+".json");
-    fs.writeFileSync(shFile,`
-{
-  "$schema" : "http://json-schema.org/draft-04/schema" ,
-  "type" : "object" ,
-  "properties" : {
-   }
-}
-`)
-   atom.workspace.open(shFile,{});
-}
+// export function createGlobalSchema(attr:hl.IAttribute){
+//     var r=attr.parent().root();
+//     var t:def.NodeClass=<def.NodeClass>attr.property().range().universe().type("GlobalSchema");
+//     var sc=stubs.createStubNode(t,(<any>t.universe().type("Api")).property("schemas"),""+attr.value());
+//     sc.attrOrCreate("value").setValue("!include "+"schemas/"+attr.value()+".json")
+//     r.add(sc);
+//     var ed=atom.workspace.getActiveTextEditor();
+//     ed.getBuffer().setText(r.lowLevel().unit().contents());
+//     var sdir=path.resolve(path.dirname(ed.getPath()),"schemas");
+//     if (!fs.existsSync(sdir)){
+//         fs.mkdirSync(sdir);
+//     }
+//     var shFile=path.resolve(sdir,attr.value()+".json");
+//     fs.writeFileSync(shFile,`
+// {
+//   "$schema" : "http://json-schema.org/draft-04/schema" ,
+//   "type" : "object" ,
+//   "properties" : {
+//    }
+// }
+// `)
+//    atom.workspace.open(shFile,{});
+// }
 
-export function createGlobalSchemaFromNameAndContent(root:hl.IHighLevelNode,name:string,schp:string,content:string, absolutePath?: string){
-    if (universeHelpers.isRAML10Node(root)) {
-        createGlobalSchemaFromNameAndContent10(root, name, schp, content, absolutePath);
-    } else if (universeHelpers.isRAML08Node(root)) {
-        createGlobalSchemaFromNameAndContent08(root, name, schp, content, absolutePath);
-    }
-}
+// export function createGlobalSchemaFromNameAndContent(root:hl.IHighLevelNode,name:string,schp:string,content:string, absolutePath?: string){
+//     if (universeHelpers.isRAML10Node(root)) {
+//         createGlobalSchemaFromNameAndContent10(root, name, schp, content, absolutePath);
+//     } else if (universeHelpers.isRAML08Node(root)) {
+//         createGlobalSchemaFromNameAndContent08(root, name, schp, content, absolutePath);
+//     }
+// }
 
 function createSchemaFile(content : string, schemaPath : string, absolutePath? : string) {
     var ed=getActiveEditor()
@@ -77,42 +77,42 @@ function createSchemaFile(content : string, schemaPath : string, absolutePath? :
     fs.writeFileSync(shFile,content)
 }
 
-export function createGlobalSchemaFromNameAndContent10(root:hl.IHighLevelNode,name:string,
-                                                       schemaPath:string,content:string, absolutePath?: string){
-    var t:def.NodeClass=<def.NodeClass>root.definition().universe().type(universes.Universe10.TypeDeclaration.name);
-    var sc=stubs.createStubNode(t,
-        (<any>t.universe().type(universes.Universe10.Api.name)).property(universes.Universe10.Api.properties.types.name),
-        ""+name);
+// export function createGlobalSchemaFromNameAndContent10(root:hl.IHighLevelNode,name:string,
+//                                                        schemaPath:string,content:string, absolutePath?: string){
+//     var t:def.NodeClass=<def.NodeClass>root.definition().universe().type(universes.Universe10.TypeDeclaration.name);
+//     var sc=stubs.createStubNode(t,
+//         (<any>t.universe().type(universes.Universe10.Api.name)).property(universes.Universe10.Api.properties.types.name),
+//         ""+name);
+//
+//     sc.attrOrCreate(universes.Universe10.TypeDeclaration.properties.type.name).setValue("!include "+schemaPath)
+//
+//     root.add(sc);
+//
+//     createSchemaFile(content, schemaPath, absolutePath);
+// }
 
-    sc.attrOrCreate(universes.Universe10.TypeDeclaration.properties.type.name).setValue("!include "+schemaPath)
+// export function createGlobalSchemaFromNameAndContent08(root:hl.IHighLevelNode,name:string,schp:string,content:string, absolutePath?: string){
+//     var t:def.NodeClass=<def.NodeClass>root.definition().universe().type(universes.Universe08.GlobalSchema.name);
+//     var sc=stubs.createStubNode(t,
+//         (<any>t.universe().type(universes.Universe08.Api.name)).property(universes.Universe08.Api.properties.schemas.name),
+//         ""+name);
+//
+//     sc.attrOrCreate(universes.Universe08.GlobalSchema.properties.value.name).setValue("!include "+schp)
+//
+//     root.add(sc);
+//
+//     createSchemaFile(content, schp, absolutePath);
+// }
 
-    root.add(sc);
-
-    createSchemaFile(content, schemaPath, absolutePath);
-}
-
-export function createGlobalSchemaFromNameAndContent08(root:hl.IHighLevelNode,name:string,schp:string,content:string, absolutePath?: string){
-    var t:def.NodeClass=<def.NodeClass>root.definition().universe().type(universes.Universe08.GlobalSchema.name);
-    var sc=stubs.createStubNode(t,
-        (<any>t.universe().type(universes.Universe08.Api.name)).property(universes.Universe08.Api.properties.schemas.name),
-        ""+name);
-
-    sc.attrOrCreate(universes.Universe08.GlobalSchema.properties.value.name).setValue("!include "+schp)
-
-    root.add(sc);
-
-    createSchemaFile(content, schp, absolutePath);
-}
-
-export function saveExample(r:hl.IHighLevelNode,schp:string,content:string){
-    var ed=getActiveEditor();
-    var sdir=path.resolve(path.dirname(ed.getPath()),path.dirname(schp));
-    if (!fs.existsSync(sdir)){
-        fs.mkdirSync(sdir);
-    }
-    var shFile=path.resolve(path.dirname(ed.getPath()),schp);
-    fs.writeFileSync(shFile,content)
-}
+// export function saveExample(r:hl.IHighLevelNode,schp:string,content:string){
+//     var ed=getActiveEditor();
+//     var sdir=path.resolve(path.dirname(ed.getPath()),path.dirname(schp));
+//     if (!fs.existsSync(sdir)){
+//         fs.mkdirSync(sdir);
+//     }
+//     var shFile=path.resolve(path.dirname(ed.getPath()),schp);
+//     fs.writeFileSync(shFile,content)
+// }
 
 
 class NewProjectDialog{
@@ -386,17 +386,17 @@ function stripIndent(text:string,indent:string){
     }
     return rs.join("");
 }
-var leadingIndent = function (node:lowLevel.ILowLevelASTNode, text:string) {
-    var leading = "";
-    var pos = node.start() - 1;
-    while (pos > 0) {
-        var ch = text[pos];
-        if (ch == '\r' || ch == '\n') break;
-        leading = ch + leading;
-        pos--;
-    }
-    return leading;
-};
+// var leadingIndent = function (node:lowLevel.ILowLevelASTNode, text:string) {
+//     var leading = "";
+//     var pos = node.start() - 1;
+//     while (pos > 0) {
+//         var ch = text[pos];
+//         if (ch == '\r' || ch == '\n') break;
+//         leading = ch + leading;
+//         pos--;
+//     }
+//     return leading;
+// };
 function indent(line:string){
     var rs="";
     for (var i=0;i<line.length;i++){
@@ -425,82 +425,82 @@ export function getActiveEditor() {
     return null
 }
 
-export class MoveToNewFileDialog{
-
-    constructor(private node:hl.IHighLevelNode){
-
-    }
-    destination:string;
-
-    show(){
-        var zz:any=null;
-        var node=this.node;
-        var vc=UI.section("Move node content to new file ",UI.Icon.GIST_NEW,false,false);
-        var errorLabel=UI.label("please enter correct destination path",UI.Icon.BUG,UI.TextClasses.ERROR,UI.HighLightClasses.NONE);
-        vc.addChild(UI.vc(errorLabel));
-        vc.addChild(UI.label("Please enter destination path"));
-        var txt=UI.texfField("","",x=>{
-            if (!txt){
-                return;
-            }
-            this.destination=txt.getBinding().get();
-            var isError=this.destination.trim().length==0
-            if (!isError) {
-                if (path.extname(this.destination) != '.raml') {
-                    isError = true;
-                }
-            }
-            if (!isError) {
-                var dir = path.resolve(path.dirname(getActiveEditor().getPath()), path.dirname(this.destination));
-                if (!fs.existsSync(dir)) {
-                    isError = true;
-                }
-                else{
-                    var st=fs.statSync(dir)
-                    if (!st.isDirectory()){
-                        isError=true;
-                    }
-                }
-            }
-
-            errorLabel.setDisplay(isError);
-            okButton.setDisabled(isError);
-        });
-        vc.addChild(UI.vc(txt));
-        var buttonBar=UI.hc().setPercentWidth(100).setStyle("display","flex");
-        buttonBar.addChild(UI.label("",null,null,null).setStyle("flex","1"))
-        buttonBar.addChild(UI.button("Cancel",UI.ButtonSizes.NORMAL,UI.ButtonHighlights.NO_HIGHLIGHT,UI.Icon.NONE,x=>{zz.destroy()}).margin(10,10))
-        var okButton=UI.button("Move",UI.ButtonSizes.NORMAL,UI.ButtonHighlights.SUCCESS,UI.Icon.NONE,x=>{
-            var d=path.resolve(path.dirname(getActiveEditor().getPath()), this.destination);
-            var dump=this.node.lowLevel().dump();
-            var ci=splitOnLines(dump);
-            var li=ci.length>1?indent(ci[1]):indent(ci[0]);
-            dump=dump.substring(this.node.lowLevel().keyEnd()-this.node.lowLevel().start()+1).trim();
-            dump=stripIndent(dump,li);
-            dump="#%RAML 0.8 "+this.node.definition().nameId()+"\n"+dump;
-            fs.writeFileSync(d,dump);
-            //no we need to replace content of the node with text;
-
-            var txt=node.lowLevel().unit().contents();
-            var endPart=txt.substring(node.lowLevel().end());
-            var startPart=txt.substring(0,node.lowLevel().keyEnd()+1);
-            var vl=startPart+" !include "+this.destination+endPart;
-            getActiveEditor().setText(vl);
-            zz.destroy();
-        });
-        okButton.setDisabled(true)
-        buttonBar.addChild(okButton);
-        vc.addChild(buttonBar)
-        var html=vc.renderUI();
-        zz=(<any>atom).workspace.addModalPanel( { item: html});
-        html.focus();
-    }
-
-
-}
-export function moveOut(h:hl.IHighLevelNode){
-    new MoveToNewFileDialog(h).show()
-}
+// export class MoveToNewFileDialog{
+//
+//     constructor(private node:hl.IHighLevelNode){
+//
+//     }
+//     destination:string;
+//
+//     show(){
+//         var zz:any=null;
+//         var node=this.node;
+//         var vc=UI.section("Move node content to new file ",UI.Icon.GIST_NEW,false,false);
+//         var errorLabel=UI.label("please enter correct destination path",UI.Icon.BUG,UI.TextClasses.ERROR,UI.HighLightClasses.NONE);
+//         vc.addChild(UI.vc(errorLabel));
+//         vc.addChild(UI.label("Please enter destination path"));
+//         var txt=UI.texfField("","",x=>{
+//             if (!txt){
+//                 return;
+//             }
+//             this.destination=txt.getBinding().get();
+//             var isError=this.destination.trim().length==0
+//             if (!isError) {
+//                 if (path.extname(this.destination) != '.raml') {
+//                     isError = true;
+//                 }
+//             }
+//             if (!isError) {
+//                 var dir = path.resolve(path.dirname(getActiveEditor().getPath()), path.dirname(this.destination));
+//                 if (!fs.existsSync(dir)) {
+//                     isError = true;
+//                 }
+//                 else{
+//                     var st=fs.statSync(dir)
+//                     if (!st.isDirectory()){
+//                         isError=true;
+//                     }
+//                 }
+//             }
+//
+//             errorLabel.setDisplay(isError);
+//             okButton.setDisabled(isError);
+//         });
+//         vc.addChild(UI.vc(txt));
+//         var buttonBar=UI.hc().setPercentWidth(100).setStyle("display","flex");
+//         buttonBar.addChild(UI.label("",null,null,null).setStyle("flex","1"))
+//         buttonBar.addChild(UI.button("Cancel",UI.ButtonSizes.NORMAL,UI.ButtonHighlights.NO_HIGHLIGHT,UI.Icon.NONE,x=>{zz.destroy()}).margin(10,10))
+//         var okButton=UI.button("Move",UI.ButtonSizes.NORMAL,UI.ButtonHighlights.SUCCESS,UI.Icon.NONE,x=>{
+//             var d=path.resolve(path.dirname(getActiveEditor().getPath()), this.destination);
+//             var dump=this.node.lowLevel().dump();
+//             var ci=splitOnLines(dump);
+//             var li=ci.length>1?indent(ci[1]):indent(ci[0]);
+//             dump=dump.substring(this.node.lowLevel().keyEnd()-this.node.lowLevel().start()+1).trim();
+//             dump=stripIndent(dump,li);
+//             dump="#%RAML 0.8 "+this.node.definition().nameId()+"\n"+dump;
+//             fs.writeFileSync(d,dump);
+//             //no we need to replace content of the node with text;
+//
+//             var txt=node.lowLevel().unit().contents();
+//             var endPart=txt.substring(node.lowLevel().end());
+//             var startPart=txt.substring(0,node.lowLevel().keyEnd()+1);
+//             var vl=startPart+" !include "+this.destination+endPart;
+//             getActiveEditor().setText(vl);
+//             zz.destroy();
+//         });
+//         okButton.setDisabled(true)
+//         buttonBar.addChild(okButton);
+//         vc.addChild(buttonBar)
+//         var html=vc.renderUI();
+//         zz=(<any>atom).workspace.addModalPanel( { item: html});
+//         html.focus();
+//     }
+//
+//
+// }
+// export function moveOut(h:hl.IHighLevelNode){
+//     new MoveToNewFileDialog(h).show()
+// }
 
 export function revalidate() {
     var currentEditor = getActiveEditor();
@@ -509,145 +509,145 @@ export function revalidate() {
     linterUI.relint(currentEditor);
 }
 
-export function renameRAMLElement() {
-    var ed = getActiveEditor();
-    var quickFixes:QuickFix[] = [];
-    if (ed) {
-        if (path.extname(ed.getPath()) == '.raml') {
-            var request = {editor: ed, bufferPosition: ed.getCursorBufferPosition()};
-            var node = provider.getAstNode(request, false);
-            if (!node) {
-                return;
-            }
-            var offset = request.editor.getBuffer().characterIndexForPosition(request.bufferPosition);
-            var kind = search.determineCompletionKind(ed.getBuffer().getText(), offset);
-            if (kind == search.LocationKind.VALUE_COMPLETION) {
-                var hlnode = <hl.IHighLevelNode>node;
+// export function renameRAMLElement() {
+//     var ed = getActiveEditor();
+//     var quickFixes:QuickFix[] = [];
+//     if (ed) {
+//         if (path.extname(ed.getPath()) == '.raml') {
+//             var request = {editor: ed, bufferPosition: ed.getCursorBufferPosition()};
+//             var node = provider.getAstNode(request, false);
+//             if (!node) {
+//                 return;
+//             }
+//             var offset = request.editor.getBuffer().characterIndexForPosition(request.bufferPosition);
+//             var kind = search.determineCompletionKind(ed.getBuffer().getText(), offset);
+//             if (kind == search.LocationKind.VALUE_COMPLETION) {
+//                 var hlnode = <hl.IHighLevelNode>node;
+//
+//                 var attr = _.find(hlnode.attrs(), x=>x.lowLevel().start() < offset && x.lowLevel().end() >= offset && !x.property().getAdapter(services.RAMLPropertyService).isKey());
+//                 if (attr) {
+//                     if (attr.value()) {
+//                         var p:hl.IProperty = attr.property();
+//                         //FIXME INFRASTRUCTURE NEEDED
+//                         var v = attr.value();
+//                         var targets = search.referenceTargets(p,hlnode);
+//                         var t:hl.IHighLevelNode = _.find(targets, x=>x.name() == attr.value())
+//                         if (t) {
+//                             UI.prompt("New name for " + attr.value(), newVal=> {
+//                                 findUsagesImpl((n, r)=> {
+//                                     //todo update nodes
+//                                     r.reverse().forEach(x=> {
+//                                         var ua = x;
+//                                         ua.asAttr().setValue(newVal)
+//                                     })
+//                                     n.attr(n.definition().getAdapter(services.RAMLService).getKeyProp().nameId()).setValue(newVal);
+//                                     var ed = getActiveEditor();
+//                                     ed.getBuffer().setText(n.lowLevel().unit().contents());
+//
+//                                 })
+//                             }, attr.value());
+//                         }
+//                     }
+//                     //console.log(attr.value());
+//                 }
+//             }
+//             if (kind == search.LocationKind.KEY_COMPLETION || kind == search.LocationKind.SEQUENCE_KEY_COPLETION) {
+//                 var hlnode = <hl.IHighLevelNode>node;
+//
+//                         UI.prompt("New name for " + hlnode.name(), newVal=> {
+//                             findUsagesImpl((n, r)=> {
+//                                 var oldValue = n.attrValue(n.definition().getAdapter(services.RAMLService).getKeyProp().nameId())
+//
+//                                 //todo update nodes
+//                                 r.reverse().forEach(x=> {
+//                                     var ua = x;
+//
+//                                     renameInProperty(ua.asAttr(), oldValue, newVal)
+//                                 })
+//                                 n.attr(n.definition().getAdapter(services.RAMLService).getKeyProp().nameId()).setValue(newVal);
+//                                 var ed = getActiveEditor();
+//                                 ed.getBuffer().setText(n.lowLevel().unit().contents());
+//
+//                             })
+//                         }, hlnode.name());
+//             }
+//         }
+//     }
+// }
 
-                var attr = _.find(hlnode.attrs(), x=>x.lowLevel().start() < offset && x.lowLevel().end() >= offset && !x.property().getAdapter(services.RAMLPropertyService).isKey());
-                if (attr) {
-                    if (attr.value()) {
-                        var p:hl.IProperty = attr.property();
-                        //FIXME INFRASTRUCTURE NEEDED
-                        var v = attr.value();
-                        var targets = search.referenceTargets(p,hlnode);
-                        var t:hl.IHighLevelNode = _.find(targets, x=>x.name() == attr.value())
-                        if (t) {
-                            UI.prompt("New name for " + attr.value(), newVal=> {
-                                findUsagesImpl((n, r)=> {
-                                    //todo update nodes
-                                    r.reverse().forEach(x=> {
-                                        var ua = x;
-                                        ua.asAttr().setValue(newVal)
-                                    })
-                                    n.attr(n.definition().getAdapter(services.RAMLService).getKeyProp().nameId()).setValue(newVal);
-                                    var ed = getActiveEditor();
-                                    ed.getBuffer().setText(n.lowLevel().unit().contents());
-
-                                })
-                            }, attr.value());
-                        }
-                    }
-                    //console.log(attr.value());
-                }
-            }
-            if (kind == search.LocationKind.KEY_COMPLETION || kind == search.LocationKind.SEQUENCE_KEY_COPLETION) {
-                var hlnode = <hl.IHighLevelNode>node;
-
-                        UI.prompt("New name for " + hlnode.name(), newVal=> {
-                            findUsagesImpl((n, r)=> {
-                                var oldValue = n.attrValue(n.definition().getAdapter(services.RAMLService).getKeyProp().nameId())
-
-                                //todo update nodes
-                                r.reverse().forEach(x=> {
-                                    var ua = x;
-
-                                    renameInProperty(ua.asAttr(), oldValue, newVal)
-                                })
-                                n.attr(n.definition().getAdapter(services.RAMLService).getKeyProp().nameId()).setValue(newVal);
-                                var ed = getActiveEditor();
-                                ed.getBuffer().setText(n.lowLevel().unit().contents());
-
-                            })
-                        }, hlnode.name());
-            }
-        }
-    }
-}
-
-function renameInProperty(property : hl.IAttribute, contentToReplace : string, replaceWith : string) {
-    var oldPropertyValue = property.value();
-    if (typeof oldPropertyValue == 'string') {
-
-        var oldPropertyStringValue = <string> oldPropertyValue;
-
-        var newPropertyStringValue = oldPropertyStringValue.replace(contentToReplace, replaceWith)
-        property.setValue(newPropertyStringValue)
-        if (oldPropertyStringValue.indexOf(contentToReplace) == -1) {
-            if (property.name().indexOf(contentToReplace)!=-1){
-                var newValue = (<string>property.name()).replace(contentToReplace, replaceWith);
-                property.setKey(newValue);
-            }
-        }
-        return;
-    } else if (oldPropertyValue && (typeof oldPropertyValue ==="object")) {
-        var structuredValue = <hl.IStructuredValue> oldPropertyValue;
-
-        var oldPropertyStringValue = structuredValue.valueName();
-        if (oldPropertyStringValue.indexOf(contentToReplace) != -1) {
-            var convertedHighLevel = structuredValue.toHighLevel();
-
-            if(convertedHighLevel) {
-                var found=false;
-                if (convertedHighLevel.definition().isAnnotationType()){
-                    var prop=getKey((<def.AnnotationType>convertedHighLevel.definition()),structuredValue.lowLevel())
-                    prop.setValue("("+replaceWith+")");
-                    return;
-                }
-                convertedHighLevel.attrs().forEach(attribute => {
-                    if(attribute.property().getAdapter(services.RAMLPropertyService).isKey()) {
-                        var oldValue = attribute.value();
-                        if (typeof oldValue == 'string') {
-                            found=true;
-                            var newValue = (<string>oldValue).replace(contentToReplace, replaceWith);
-                            attribute.setValue(newValue);
-                        }
-                    }
-                })
-
-                return;
-            }
-            //var lowLevelNode = structuredValue.lowLevel();
-            //if ((<any>lowLevelNode).yamlNode) {
-            //    var yamlNode : yaml.YAMLNode = (<any>lowLevelNode).yamlNode();
-            //    if(yamlNode.kind == yaml.Kind.MAPPING) {
-            //        var key = (<yaml.YAMLMapping>yamlNode).key
-            //        if (key && key.value && key.value.indexOf(contentToReplace) != -1){
-            //            oldPropertyStringValue = key.value
-            //            var newStringValue = oldPropertyStringValue.replace(contentToReplace, replaceWith);
-            //            key.value = newStringValue;
-            //            return;
-            //        }
-            //    }
-            //}
-
-
-        }
-    }
-
-    //default case
-    property.setValue(replaceWith)
-}
-function getKey(t: def.AnnotationType,n:lowLevel.ILowLevelASTNode){
-    var up=new def.UserDefinedProp("name", null);
-    //up.withDomain(this);
-    up.withRange(this.universe().type(universes.Universe10.StringType.name));
-    up.withFromParentKey(true);
-    var node=t.getAdapter(services.RAMLService).getDeclaringNode();
-    //node:ll.ILowLevelASTNode, parent:hl.IHighLevelNode, private _def:hl.IValueTypeDefinition, private _prop:hl.IProperty, private fromKey:boolean = false
-    return stubs.createASTPropImpl(n,node,up.range(),up,true);
-    //rs.push(up);
-}
+// function renameInProperty(property : hl.IAttribute, contentToReplace : string, replaceWith : string) {
+//     var oldPropertyValue = property.value();
+//     if (typeof oldPropertyValue == 'string') {
+//
+//         var oldPropertyStringValue = <string> oldPropertyValue;
+//
+//         var newPropertyStringValue = oldPropertyStringValue.replace(contentToReplace, replaceWith)
+//         property.setValue(newPropertyStringValue)
+//         if (oldPropertyStringValue.indexOf(contentToReplace) == -1) {
+//             if (property.name().indexOf(contentToReplace)!=-1){
+//                 var newValue = (<string>property.name()).replace(contentToReplace, replaceWith);
+//                 property.setKey(newValue);
+//             }
+//         }
+//         return;
+//     } else if (oldPropertyValue && (typeof oldPropertyValue ==="object")) {
+//         var structuredValue = <hl.IStructuredValue> oldPropertyValue;
+//
+//         var oldPropertyStringValue = structuredValue.valueName();
+//         if (oldPropertyStringValue.indexOf(contentToReplace) != -1) {
+//             var convertedHighLevel = structuredValue.toHighLevel();
+//
+//             if(convertedHighLevel) {
+//                 var found=false;
+//                 if (convertedHighLevel.definition().isAnnotationType()){
+//                     var prop=getKey((<def.AnnotationType>convertedHighLevel.definition()),structuredValue.lowLevel())
+//                     prop.setValue("("+replaceWith+")");
+//                     return;
+//                 }
+//                 convertedHighLevel.attrs().forEach(attribute => {
+//                     if(attribute.property().getAdapter(services.RAMLPropertyService).isKey()) {
+//                         var oldValue = attribute.value();
+//                         if (typeof oldValue == 'string') {
+//                             found=true;
+//                             var newValue = (<string>oldValue).replace(contentToReplace, replaceWith);
+//                             attribute.setValue(newValue);
+//                         }
+//                     }
+//                 })
+//
+//                 return;
+//             }
+//             //var lowLevelNode = structuredValue.lowLevel();
+//             //if ((<any>lowLevelNode).yamlNode) {
+//             //    var yamlNode : yaml.YAMLNode = (<any>lowLevelNode).yamlNode();
+//             //    if(yamlNode.kind == yaml.Kind.MAPPING) {
+//             //        var key = (<yaml.YAMLMapping>yamlNode).key
+//             //        if (key && key.value && key.value.indexOf(contentToReplace) != -1){
+//             //            oldPropertyStringValue = key.value
+//             //            var newStringValue = oldPropertyStringValue.replace(contentToReplace, replaceWith);
+//             //            key.value = newStringValue;
+//             //            return;
+//             //        }
+//             //    }
+//             //}
+//
+//
+//         }
+//     }
+//
+//     //default case
+//     property.setValue(replaceWith)
+// }
+// function getKey(t: def.AnnotationType,n:lowLevel.ILowLevelASTNode){
+//     var up=new def.UserDefinedProp("name", null);
+//     //up.withDomain(this);
+//     up.withRange(this.universe().type(universes.Universe10.StringType.name));
+//     up.withFromParentKey(true);
+//     var node=t.getAdapter(services.RAMLService).getDeclaringNode();
+//     //node:ll.ILowLevelASTNode, parent:hl.IHighLevelNode, private _def:hl.IValueTypeDefinition, private _prop:hl.IProperty, private fromKey:boolean = false
+//     return stubs.createASTPropImpl(n,node,up.range(),up,true);
+//     //rs.push(up);
+// }
 
 var getKeyValue = function (offset, txt) {
     var m = offset;
@@ -695,140 +695,140 @@ export function select(){
 
 
 
-export function findUsagesImpl(f:(x:hl.IHighLevelNode,t:hl.IParseResult[])=>any=display){
-    var ed=getActiveEditor();
-    if (ed){
-        if (path.extname(ed.getPath())=='.raml'){
-            var request={editor:ed,bufferPosition:ed.getCursorBufferPosition()};
-            var p=request.editor.getPath();
-            var prj=rp.project.createProject(path.dirname(p));
-            var unit=prj.unit(path.basename(p));
-            var offset=request.editor.getBuffer().characterIndexForPosition(request.bufferPosition);
-            var text=request.editor.getBuffer().getText();
-            unit.updateContent(text);
-            var decl=search.findUsages(unit,offset);
-            if (decl.node) {
-                f(decl.node, decl.results);
-            }
-        }
-    }
-}
-export function findUsages(){
-    findUsagesImpl(display);
-}
-class SearchResultView extends SpacePenViews.ScrollView {
+// export function findUsagesImpl(f:(x:hl.IHighLevelNode,t:hl.IParseResult[])=>any=display){
+//     var ed=getActiveEditor();
+//     if (ed){
+//         if (path.extname(ed.getPath())=='.raml'){
+//             var request={editor:ed,bufferPosition:ed.getCursorBufferPosition()};
+//             var p=request.editor.getPath();
+//             var prj=rp.project.createProject(path.dirname(p));
+//             var unit=prj.unit(path.basename(p));
+//             var offset=request.editor.getBuffer().characterIndexForPosition(request.bufferPosition);
+//             var text=request.editor.getBuffer().getText();
+//             unit.updateContent(text);
+//             var decl=search.findUsages(unit,offset);
+//             if (decl.node) {
+//                 f(decl.node, decl.results);
+//             }
+//         }
+//     }
+// }
+// export function findUsages(){
+//     findUsagesImpl(display);
+// }
+// class SearchResultView extends SpacePenViews.ScrollView {
+//
+//
+//     scriptPath:string;
+//     constructor(private query:string,private _result:hl.IParseResult[] ) {
+//         super();
+//     }
+//     initialize () {
+//         super.initialize.apply(this, arguments)
+//         return true;
+//     }
+//
+//     static content (): HTMLElement {
+//         return this.div({ class: 'raml-console pane-item', tabindex: -1 })
+//     }
+//
+//     isAttached=false;
+//
+//     attached (): void {
+//         if (this.isAttached) {
+//             return
+//         }
+//         this.load();
+//         this.isAttached = true
+//     }
+//     panel:any;
+//
+//     setInput(query:string,_result:hl.IParseResult[]){
+//         this.query=query;
+//         this._result=_result;
+//         this.load();
+//     }
+//     load(){
+//         var section=UI.section("Find usages for "+this.query,UI.Icon.SEARCH)
+//         var view=UI.list(this._result,x=>{
+//             var p1 = getActiveEditor().getBuffer().positionForCharacterIndex(x.getLowLevelStart());
+//
+//             var res= UI.hc(UI.a(x.id(),y=>{
+//                openPropertyNode(getActiveEditor(),x);
+//            }),UI.label(x.lowLevel().unit().path()+" line:",UI.Icon.NONE,UI.TextClasses.SUBTLE).pad(5,5),
+//            UI.label(""+p1.row,UI.Icon.NONE,UI.TextClasses.SUCCESS))
+//            return res;
+//         });
+//         view.setStyle("max-height","400px");
+//         section.addChild(view);
+//         section.addChild(UI.button("Close",UI.ButtonSizes.SMALL,UI.ButtonHighlights.PRIMARY,UI.Icon.NONE,x=>{this.panel.destroy();sv=null}))
+//         this.html(section.renderUI());
+//     }
+// }
+// var sv:SearchResultView;
 
+// function display(query:hl.IHighLevelNode, n:hl.IParseResult[]){
+//     if (sv){
+//         sv.setInput(query.name(),n);
+//     }
+//     else {
+//         sv = new SearchResultView(query.name() + ":" + query.definition().nameId(), n)
+//         sv.panel = (<any>atom.workspace).addBottomPanel({item: sv});
+//     }
+// }
+// //TODO REFACTOR COMMON LOGIC TO COFE
+// var openPropertyNode = function (ed:AtomCore.IEditor, t:hl.IParseResult) {
+//     var p1 = ed.getBuffer().positionForCharacterIndex(t.getLowLevelStart());
+//     var p2 = ed.getBuffer().positionForCharacterIndex(t.getLowLevelEnd());
+//     ed.setSelectedBufferRange({start: p1, end: p2}, {});
+// };
+// //TODO REFACTOR COMMON LOGIC TO COFE
+// var openNode = function (ed:AtomCore.IEditor, t:hl.IParseResult) {
+//    openLowLevelNode(ed,t.lowLevel());
+// };
+// //TODO REFACTOR COMMON LOGIC TO COFE
+// var openLowLevelNode = function (ed:AtomCore.IEditor, t:lowLevel.ILowLevelASTNode) {
+//     if (t.unit().absolutePath()!=ed.getPath()){
+//         atom.workspace.open(t.unit().absolutePath(),{}).then(x=>{
+//
+//             ed=getActiveEditor();
+//             openLowLevelNode(ed,t);
+//         });
+//         return;
+//     }
+//     var p1 = ed.getBuffer().positionForCharacterIndex(t.start());
+//     var p2 = ed.getBuffer().positionForCharacterIndex(t.end());
+//     p2.column = p1.column + t.key()?t.key().length:0;
+//     p2.row = p1.row;
+//     ed.setSelectedBufferRange({start: p1, end: p2}, {});
+// };
 
-    scriptPath:string;
-    constructor(private query:string,private _result:hl.IParseResult[] ) {
-        super();
-    }
-    initialize () {
-        super.initialize.apply(this, arguments)
-        return true;
-    }
-
-    static content (): HTMLElement {
-        return this.div({ class: 'raml-console pane-item', tabindex: -1 })
-    }
-
-    isAttached=false;
-
-    attached (): void {
-        if (this.isAttached) {
-            return
-        }
-        this.load();
-        this.isAttached = true
-    }
-    panel:any;
-
-    setInput(query:string,_result:hl.IParseResult[]){
-        this.query=query;
-        this._result=_result;
-        this.load();
-    }
-    load(){
-        var section=UI.section("Find usages for "+this.query,UI.Icon.SEARCH)
-        var view=UI.list(this._result,x=>{
-            var p1 = getActiveEditor().getBuffer().positionForCharacterIndex(x.getLowLevelStart());
-
-            var res= UI.hc(UI.a(x.id(),y=>{
-               openPropertyNode(getActiveEditor(),x);
-           }),UI.label(x.lowLevel().unit().path()+" line:",UI.Icon.NONE,UI.TextClasses.SUBTLE).pad(5,5),
-           UI.label(""+p1.row,UI.Icon.NONE,UI.TextClasses.SUCCESS))
-           return res;
-        });
-        view.setStyle("max-height","400px");
-        section.addChild(view);
-        section.addChild(UI.button("Close",UI.ButtonSizes.SMALL,UI.ButtonHighlights.PRIMARY,UI.Icon.NONE,x=>{this.panel.destroy();sv=null}))
-        this.html(section.renderUI());
-    }
-}
-var sv:SearchResultView;
-
-function display(query:hl.IHighLevelNode, n:hl.IParseResult[]){
-    if (sv){
-        sv.setInput(query.name(),n);
-    }
-    else {
-        sv = new SearchResultView(query.name() + ":" + query.definition().nameId(), n)
-        sv.panel = (<any>atom.workspace).addBottomPanel({item: sv});
-    }
-}
-//TODO REFACTOR COMMON LOGIC TO COFE
-var openPropertyNode = function (ed:AtomCore.IEditor, t:hl.IParseResult) {
-    var p1 = ed.getBuffer().positionForCharacterIndex(t.getLowLevelStart());
-    var p2 = ed.getBuffer().positionForCharacterIndex(t.getLowLevelEnd());
-    ed.setSelectedBufferRange({start: p1, end: p2}, {});
-};
-//TODO REFACTOR COMMON LOGIC TO COFE
-var openNode = function (ed:AtomCore.IEditor, t:hl.IParseResult) {
-   openLowLevelNode(ed,t.lowLevel());
-};
-//TODO REFACTOR COMMON LOGIC TO COFE
-var openLowLevelNode = function (ed:AtomCore.IEditor, t:lowLevel.ILowLevelASTNode) {
-    if (t.unit().absolutePath()!=ed.getPath()){
-        atom.workspace.open(t.unit().absolutePath(),{}).then(x=>{
-
-            ed=getActiveEditor();
-            openLowLevelNode(ed,t);
-        });
-        return;
-    }
-    var p1 = ed.getBuffer().positionForCharacterIndex(t.start());
-    var p2 = ed.getBuffer().positionForCharacterIndex(t.end());
-    p2.column = p1.column + t.key()?t.key().length:0;
-    p2.row = p1.row;
-    ed.setSelectedBufferRange({start: p1, end: p2}, {});
-};
-
-export function gotoDeclaration(){
-    var ed=getActiveEditor();
-    if (ed){
-        if (path.extname(ed.getPath())=='.raml'){
-            var request={editor:ed,bufferPosition:ed.getCursorBufferPosition()};
-            var p=request.editor.getPath();
-            var prj=rp.project.createProject(path.dirname(p));
-            var unit=prj.unit(path.basename(p));
-            var offset=request.editor.getBuffer().characterIndexForPosition(request.bufferPosition);
-            var text=request.editor.getBuffer().getText();
-            unit.updateContent(text);
-            var decl=search.findDeclaration(unit,offset);
-
-            if(decl) {
-                if(!(<any>decl).absolutePath){
-                    openLowLevelNode(ed,(<hl.IParseResult>decl).lowLevel());
-                } else {
-                    var absolutePath = (<lowLevel.ICompilationUnit>decl).absolutePath();
-
-                    if(absolutePath && absolutePath.toLowerCase().indexOf('http') === 0) {
-                        return;
-                    }
-
-                    atom.workspace.open(absolutePath, {});
-                }
-            }
-        }
-    }
-}
+// export function gotoDeclaration(){
+//     var ed=getActiveEditor();
+//     if (ed){
+//         if (path.extname(ed.getPath())=='.raml'){
+//             var request={editor:ed,bufferPosition:ed.getCursorBufferPosition()};
+//             var p=request.editor.getPath();
+//             var prj=rp.project.createProject(path.dirname(p));
+//             var unit=prj.unit(path.basename(p));
+//             var offset=request.editor.getBuffer().characterIndexForPosition(request.bufferPosition);
+//             var text=request.editor.getBuffer().getText();
+//             unit.updateContent(text);
+//             var decl=search.findDeclaration(unit,offset);
+//
+//             if(decl) {
+//                 if(!(<any>decl).absolutePath){
+//                     openLowLevelNode(ed,(<hl.IParseResult>decl).lowLevel());
+//                 } else {
+//                     var absolutePath = (<lowLevel.ICompilationUnit>decl).absolutePath();
+//
+//                     if(absolutePath && absolutePath.toLowerCase().indexOf('http') === 0) {
+//                         return;
+//                     }
+//
+//                     atom.workspace.open(absolutePath, {});
+//                 }
+//             }
+//         }
+//     }
+// }

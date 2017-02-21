@@ -6,38 +6,39 @@ import path=require('path')
 import Disposable = UI.IDisposable
 import CompositeDisposable = UI.CompositeDisposable
 
-import rp=require("raml-1-parser")
-import lowLevel=rp.ll;
-import hl=rp.hl;
-var universes=rp.universes
+// import rp=require("raml-1-parser")
+// import lowLevel=rp.ll;
+// import hl=rp.hl;
+// var universes=rp.universes
 
 import fs=require("fs")
-import details2=require("./details2")
+// import details2=require("./details2")
 import contextActions = require("raml-actions")
-import commonContextActions = require("../context-menu/commonContextActions")
+// import commonContextActions = require("../context-menu/commonContextActions")
 import editorTools=require("./editor-tools")
 import _=require("underscore")
 import pair = require("../../util/pair");
-import universeHelpers = rp.universeHelpers;
-import ramlOutline = require("raml-outline")
-import outlineCommon = require("./outline-common")
+// import universeHelpers = rp.universeHelpers;
+// import ramlOutline = require("raml-outline")
+// import outlineCommon = require("./outline-common")
+import ramlServer = require("raml-language-server");
 
 export class RamlOutline extends SC.Scrollable {
     private _rs: UI.TabFolder;
 
-    private createTree(p: hl.IParseResult) {
-        this._rs = createTree(p, sender => {
-            if(editorTools.aquireManager()._details && sender.selection && sender.selection.elements && this.fire == true){
-                if (sender.selection.elements.length>0&&sender.selection.elements[0]) {
-                    editorTools.aquireManager().setSelectedNode(sender.selection.elements[0].getSource());
-                }
-            }
+    private createTree(structure:{[categoryName: string]: ramlServer.StructureNodeJSON}/*p: hl.IParseResult*/) {
+        this._rs = createTree(structure, sender => {
+            // if(editorTools.aquireManager()._details && sender.selection && sender.selection.elements && this.fire == true){
+            //     if (sender.selection.elements.length>0&&sender.selection.elements[0]) {
+            //         editorTools.aquireManager().setSelectedNode(sender.selection.elements[0].getSource());
+            //     }
+            // }
         });
         this._viewers = [0, 1, 2, 3].map(i=> <UI.TreeViewer<any, any>> this._rs.get(i).content);
     }
 
     private _viewers: UI.TreeViewer<any,any>[];
-    private outlineDataRoot : ramlOutline.StructureNode;
+    private outlineDataRoot : ramlServer.StructureNodeJSON;
 
     constructor() {
         super();
@@ -55,41 +56,52 @@ export class RamlOutline extends SC.Scrollable {
 
     private fire : boolean = true;
 
-    private getNodePType(node: hl.IHighLevelNode) {
-        while (node.parent() &&node.parent().parent()) {
-            node = node.parent();
-        }
-        return getNodeType(node);
-    }
+    // private getNodePType(node: hl.IHighLevelNode) {
+    //     while (node.parent() &&node.parent().parent()) {
+    //         node = node.parent();
+    //     }
+    //     return getNodeType(node);
+    // }
 
-    private _selectedNode: hl.IHighLevelNode;
+    // private _selectedNode: hl.IHighLevelNode;
 
-    setSelection(node: hl.IHighLevelNode) {
-        //if (this._selectedNode == node) return;
-        this._selectedNode = node;
+    // setSelection(node: hl.IHighLevelNode) {
+    //     //if (this._selectedNode == node) return;
+    //     this._selectedNode = node;
+    //
+    //     this.fire = false;
+    //     try {
+    //         var index = this.getNodePType(node);
+    //         var viewer = this._viewers[index];
+    //
+    //         if (viewer != null) {
+    //             viewer.setSelection(node);
+    //             this._rs.setSelectedIndex(index);
+    //         }
+    //     }finally {
+    //         this.fire = true;
+    //     }
+    // }
 
-        this.fire = false;
-        try {
-            var index = this.getNodePType(node);
-            var viewer = this._viewers[index];
+    // unit: hl.IHighLevelNode;
 
-            if (viewer != null) {
-                viewer.setSelection(node);
-                this._rs.setSelectedIndex(index);
-            }
-        }finally {
-            this.fire = true;
-        }
-    }
+    unitPath: string;
 
-    unit: hl.IHighLevelNode;
-    setUnit(unit:hl.IHighLevelNode, force: boolean = false) {
+    setUnit(unitPath: string/*unit:hl.IHighLevelNode*/, force: boolean = false) {
         this._children=[];
-        this.createTree(unit);
-        (<any>this).addClass('raml-outline');
-        this.addChild(this._rs);
-        this.html(this.innerRenderUI());
+        this.unitPath = unitPath;
 
+        let structurePromise = ramlServer.getNodeClientConnection().getStructure(unitPath);
+        if (structurePromise) {
+            structurePromise.then(structure=>{
+
+                this.createTree(structure);
+
+                (<any>this).addClass('raml-outline');
+                this.addChild(this._rs);
+                this.html(this.innerRenderUI());
+            })
+        }
 
     }
 
@@ -106,15 +118,20 @@ export class RamlOutline extends SC.Scrollable {
     }
 
     refresh() {
-        var unit = this.unit;
+        // var unit = this.unit;
+        // this.setUnit(null);
+        // this.setUnit(unit);
+
+        var unitPath = this.unitPath;
         this.setUnit(null);
-        this.setUnit(unit);
+        this.setUnit(unitPath);
     }
 
     destroy (): void {
         editorTools.aquireManager()._view=null;
-        this._selectedNode=null;
-        this.unit=null;
+        // this._selectedNode=null;
+        // this.unit=null;
+        this.unitPath = null;
         this._viewers=[];
         this._rs=null
         this._children=[];
@@ -153,43 +170,44 @@ enum HLNodeType {
     Unknown
 }
 
-function getNodeType(node: hl.IHighLevelNode): HLNodeType {
-    if (outlineCommon.isResource(node)) return HLNodeType.Resource;
-    else if (outlineCommon.isOther(node)) return HLNodeType.Trait;
-    else if (outlineCommon.isResourceTypeOrTrait(node)) return HLNodeType.Type;
-    else if (outlineCommon.isSchemaOrType(node)) return HLNodeType.Schema;
-    else return HLNodeType.Unknown;
-}
+// function getNodeType(node: hl.IHighLevelNode): HLNodeType {
+//     if (outlineCommon.isResource(node)) return HLNodeType.Resource;
+//     else if (outlineCommon.isOther(node)) return HLNodeType.Trait;
+//     else if (outlineCommon.isResourceTypeOrTrait(node)) return HLNodeType.Type;
+//     else if (outlineCommon.isSchemaOrType(node)) return HLNodeType.Schema;
+//     else return HLNodeType.Unknown;
+// }
 
-function isApi(p: hl.IHighLevelNode) {
-    var pc=p.definition().key();
-    return pc===universes.Universe08.Api||pc===universes.Universe10.Api;
-}
-function isDocumentation(p: hl.IHighLevelNode) {
-    var pc=p.definition().key();
-    return ( pc=== universes.Universe08.DocumentationItem||pc===universes.Universe10.DocumentationItem);
-}
+// function isApi(p: hl.IHighLevelNode) {
+//     var pc=p.definition().key();
+//     return pc===universes.Universe08.Api||pc===universes.Universe10.Api;
+// }
+// function isDocumentation(p: hl.IHighLevelNode) {
+//     var pc=p.definition().key();
+//     return ( pc=== universes.Universe08.DocumentationItem||pc===universes.Universe10.DocumentationItem);
+// }
 
-function fullStructurePath(model: ramlOutline.StructureNode) {
+function fullStructurePath(model: ramlServer.StructureNodeJSON) {
     if (!model) return "";
 
-    var node = model.getSource();
-    return fullPath(<any>node);
+    return model.text;
+    // var node = model.getSource();
+    // return fullPath(<any>node);
 }
+//
+// function fullPath(node: hl.IParseResult) {
+//     if (node == null) return "";
+//     else return fullPath(node.parent()) + "/" + node.name();
+// }
 
-function fullPath(node: hl.IParseResult) {
-    if (node == null) return "";
-    else return fullPath(node.parent()) + "/" + node.name();
-}
-
-function simpleTree(input: ramlOutline.StructureNode, selectionListener: UI.ISelectionListener<any>, categoryName:string,
-                           opener: (x:ramlOutline.StructureNode)=>void=null) {
-    var viewer = UI.treeViewer<ramlOutline.StructureNode>((x:ramlOutline.StructureNode)=>{
-        return <ramlOutline.StructureNode[]>x.children;
+function simpleTree(input: ramlServer.StructureNodeJSON, selectionListener: UI.ISelectionListener<any>, categoryName:string,
+                           opener: (x:ramlServer.StructureNodeJSON)=>void=null) {
+    var viewer = UI.treeViewer<ramlServer.StructureNodeJSON>((x:ramlServer.StructureNodeJSON)=>{
+        return <ramlServer.StructureNodeJSON[]>x.children;
     }, new HLRenderer(opener), fullStructurePath);
 
     viewer.setBasicLabelFunction(x=>x.text);
-    viewer.setKeyProvider({ key: (x:ramlOutline.StructureNode)=>{return x.key} });
+    viewer.setKeyProvider({ key: (x:ramlServer.StructureNodeJSON)=>{return x.key} });
     viewer.addSelectionListener(selectionListener);
 
     viewer.getBinding().set(input);
@@ -197,36 +215,48 @@ function simpleTree(input: ramlOutline.StructureNode, selectionListener: UI.ISel
     return viewer;
 }
 
-export function createTree(p: hl.IParseResult, selectionListener: (e : UI.SelectionChangedEvent<any>) => void, opener: (x: ramlOutline.StructureNode) => void = null) {
+export function createTree(structure:{[categoryName: string]: ramlServer.StructureNodeJSON},
+                           selectionListener: (e : UI.SelectionChangedEvent<any>) => void,
+                           opener: (x: ramlServer.StructureNodeJSON) => void = null) {
 
-    var subTrees = ramlOutline.getStructureForAllCategories();
+    if (!structure) {
+        return new UI.TabFolder();
+    }
 
-    var resourcesModel = (p!=null&&subTrees!=null)?subTrees[outlineCommon.ResourcesCategory]:null;
-    var typesModel = (p!=null&&subTrees!=null)?subTrees[outlineCommon.SchemasAndTypesCategory]:null;
-    var traitsModel = (p!=null&&subTrees!=null)?subTrees[outlineCommon.ResourceTypesAndTraitsCategory]:null;
-    var otherModel = (p!=null&&subTrees!=null)?subTrees[outlineCommon.OtherCategory]:null;
+    var resourcesModel = structure[ramlServer.StructureCategories[ramlServer.StructureCategories.ResourcesCategory]];
+    var typesModel = structure[ramlServer.StructureCategories[ramlServer.StructureCategories.SchemasAndTypesCategory]];
+    var traitsModel = structure[ramlServer.StructureCategories[ramlServer.StructureCategories.ResourceTypesAndTraitsCategory]];
+    var otherModel = structure[ramlServer.StructureCategories[ramlServer.StructureCategories.OtherCategory]];
 
     // var resourcesModel = p!=null?ramlOutline.getStructure(outlineCommon.ResourcesCategory):null;
     // var typesModel = p!=null?ramlOutline.getStructure(outlineCommon.SchemasAndTypesCategory):null;
     // var traitsModel = p!=null?ramlOutline.getStructure(outlineCommon.ResourceTypesAndTraitsCategory):null;
     // var otherModel = p!=null?ramlOutline.getStructure(outlineCommon.OtherCategory):null;
 
-    var outline = resourcesModel!=null? simpleTree(resourcesModel, { selectionChanged: selectionListener }, outlineCommon.ResourcesCategory, opener):null;
-    var schemas = typesModel!=null? simpleTree(typesModel, { selectionChanged: selectionListener }, outlineCommon.SchemasAndTypesCategory, opener):null;
-    var types   = traitsModel!=null? simpleTree(traitsModel, { selectionChanged: selectionListener }, outlineCommon.ResourceTypesAndTraitsCategory, opener):null;
-    var other  = otherModel!=null? simpleTree(otherModel, { selectionChanged: selectionListener }, outlineCommon.OtherCategory, opener):null;
+    var outline = resourcesModel!=null? simpleTree(resourcesModel, { selectionChanged: selectionListener },
+            ramlServer.StructureCategories[ramlServer.StructureCategories.ResourcesCategory], opener):null;
+    var schemas = typesModel!=null? simpleTree(typesModel, { selectionChanged: selectionListener },
+            ramlServer.StructureCategories[ramlServer.StructureCategories.SchemasAndTypesCategory], opener):null;
+    var types   = traitsModel!=null? simpleTree(traitsModel, { selectionChanged: selectionListener },
+            ramlServer.StructureCategories[ramlServer.StructureCategories.ResourceTypesAndTraitsCategory], opener):null;
+    var other  = otherModel!=null? simpleTree(otherModel, { selectionChanged: selectionListener },
+            ramlServer.StructureCategories[ramlServer.StructureCategories.OtherCategory], opener):null;
 
     var folder = new UI.TabFolder();
 
-    folder.add(outlineCommon.ResourcesCategory, UI.Icon.SEARCH, outline, 'raml-icon-custom');
-    folder.add(outlineCommon.SchemasAndTypesCategory, UI.Icon.SEARCH, schemas, 'raml-icon-custom');
-    folder.add(outlineCommon.ResourceTypesAndTraitsCategory, UI.Icon.SEARCH, types, 'raml-icon-custom');
-    folder.add(outlineCommon.OtherCategory, UI.Icon.SEARCH, other, 'raml-icon-custom');
+    folder.add(ramlServer.StructureCategories[ramlServer.StructureCategories.ResourcesCategory],
+        UI.Icon.SEARCH, outline, 'raml-icon-custom');
+    folder.add(ramlServer.StructureCategories[ramlServer.StructureCategories.SchemasAndTypesCategory],
+        UI.Icon.SEARCH, schemas, 'raml-icon-custom');
+    folder.add(ramlServer.StructureCategories[ramlServer.StructureCategories.ResourceTypesAndTraitsCategory],
+        UI.Icon.SEARCH, types, 'raml-icon-custom');
+    folder.add(ramlServer.StructureCategories[ramlServer.StructureCategories.OtherCategory],
+        UI.Icon.SEARCH, other, 'raml-icon-custom');
 
     folder.setSelectedIndex(0)
 
     folder.setOnSelected(()=>{
-        var selectedTab = <UI.TreeViewer<hl.IParseResult, hl.IParseResult>> folder.selectedComponent();
+        var selectedTab : any = folder.selectedComponent();
         if (selectedTab) {
             var selection = selectedTab.getSelection();
             if (selection && selection.elements && selection.elements.length > 0) {
@@ -240,9 +270,9 @@ export function createTree(p: hl.IParseResult, selectionListener: (e : UI.Select
 }
 
 
-export class HLRenderer implements UI.ICellRenderer<ramlOutline.StructureNode>{
+export class HLRenderer implements UI.ICellRenderer<ramlServer.StructureNodeJSON>{
 
-    constructor(private opener: (x: ramlOutline.StructureNode) => void) {
+    constructor(private opener: (x: ramlServer.StructureNodeJSON) => void) {
 
     }
 
@@ -258,26 +288,26 @@ export class HLRenderer implements UI.ICellRenderer<ramlOutline.StructureNode>{
         return UI.TextClasses[highlightName];
     }
 
-    render(model: ramlOutline.StructureNode): UI.BasicComponent<any> {
+    render(model: ramlServer.StructureNodeJSON): UI.BasicComponent<any> {
         try {
 
-            if (ramlOutline.isTypedStructureNode(model)
-                && (<ramlOutline.TypedStructureNode>model).type
-                && (<ramlOutline.TypedStructureNode>model).type == ramlOutline.NodeType.ATTRIBUTE) {
-
-                var attr = <hl.IAttribute>(<any>model.getSource());
-
-                //TODO check if we really need custom selection here, otherwise the whole "is attribute" condition is redundant
-                return UI.hc(UI.label(model.text), UI.a("", x=> {
-                    var p1 = editorTools.aquireManager().getCurrentEditor().
-                        getBuffer().positionForCharacterIndex(attr.lowLevel().start());
-                    var p2 = editorTools.aquireManager().getCurrentEditor().
-                        getBuffer().positionForCharacterIndex(attr.lowLevel().end());
-                    editorTools.aquireManager().getCurrentEditor().setSelectedBufferRange({ start: p1, end: p1 }, {});
-
-                }, UI.Icon.ARROW_SMALL_LEFT, null, null));
-
-            }
+            // if (ramlOutline.isTypedStructureNode(model)
+            //     && (<ramlOutline.TypedStructureNode>model).type
+            //     && (<ramlOutline.TypedStructureNode>model).type == ramlOutline.NodeType.ATTRIBUTE) {
+            //
+            //     var attr = <hl.IAttribute>(<any>model.getSource());
+            //
+            //     //TODO check if we really need custom selection here, otherwise the whole "is attribute" condition is redundant
+            //     return UI.hc(UI.label(model.text), UI.a("", x=> {
+            //         var p1 = editorTools.aquireManager().getCurrentEditor().
+            //             getBuffer().positionForCharacterIndex(attr.lowLevel().start());
+            //         var p2 = editorTools.aquireManager().getCurrentEditor().
+            //             getBuffer().positionForCharacterIndex(attr.lowLevel().end());
+            //         editorTools.aquireManager().getCurrentEditor().setSelectedBufferRange({ start: p1, end: p1 }, {});
+            //
+            //     }, UI.Icon.ARROW_SMALL_LEFT, null, null));
+            //
+            // }
 
             var icon = UI.Icon.DASH;
             var highLight = UI.TextClasses.NORMAL;
@@ -299,10 +329,10 @@ export class HLRenderer implements UI.ICellRenderer<ramlOutline.StructureNode>{
                 hc.addChild(UI.label(model.typeText, UI.Icon.NONE, UI.TextClasses.WARNING).margin(2,0,0,0));
             }
 
-            if (model.getSource().lowLevel().unit()!=model.getSource().root().lowLevel().unit()){
-                highLight=UI.TextClasses.SUBTLE;
-                hc.addChild(UI.label("("+model.getSource().lowLevel().unit().path()+")",UI.Icon.NONE,highLight).margin(5,0,0,0));
-            }
+            // if (model.getSource().lowLevel().unit()!=model.getSource().root().lowLevel().unit()){
+            //     highLight=UI.TextClasses.SUBTLE;
+            //     hc.addChild(UI.label("("+model.getSource().lowLevel().unit().path()+")",UI.Icon.NONE,highLight).margin(5,0,0,0));
+            // }
 
             hc.addClass("outline");
             return hc;

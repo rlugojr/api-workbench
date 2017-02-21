@@ -2,9 +2,9 @@
 import fs = require('fs');
 import path = require('path');
 
-import parser = require("raml-1-parser");
+// import parser = require("raml-1-parser");
 
-import parserUtils = parser.utils;
+// import parserUtils = parser.utils;
 
 import unitUtils = require("../util/unit");
 
@@ -51,13 +51,13 @@ function lintFirstTime(linterApi: any, editor: AtomCore.IEditor) {
 }
 
 export function initEditorObservers(linterApi) {
-    parserUtils.addLoadCallback(x => {
-        var manager = editorTools.aquireManager();
-
-        if(manager) {
-            manager.updateDetails();
-        }
-    });
+    // parserUtils.addLoadCallback(x => {
+    //     var manager = editorTools.aquireManager();
+    //
+    //     if(manager) {
+    //         manager.updateDetails();
+    //     }
+    // });
 
     atom.workspace.observeTextEditors(editor => lintFirstTime(linterApi, editor));
 
