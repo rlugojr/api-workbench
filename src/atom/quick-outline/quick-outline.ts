@@ -8,7 +8,8 @@ import tooltipManager=require("../core/tooltip-manager")
 import UI=require ("atom-ui-lib")
 import outline=require("../editor-tools/outline-view")
 import editorTools=require("../editor-tools/editor-tools")
-import hl=require("raml-1-parser")
+import ramlServer = require("raml-language-server");
+// import hl=require("raml-1-parser")
 
 class QuickOutlineDialog{
 
@@ -22,54 +23,61 @@ class QuickOutlineDialog{
     show(){
         var zz:any=null;
         var nodeToSelect=null;
-        var node=<hl.IHighLevelNode>provider.getAstNode({bufferPosition:this._editor.getCursorBufferPosition(),editor:this._editor},false,false);
+        // var node=<hl.IHighLevelNode>provider.getAstNode({bufferPosition:this._editor.getCursorBufferPosition(),editor:this._editor},false,false);
         var vc=UI.section("Quick outline:");
-        var section=outline.createTree(node.root(),x=>{
-            if (x.selection){
-                if (x.selection.elements.length>0){
-                    nodeToSelect=x.selection.elements[0];
-                    ok.setDisabled(false)
-                    return;
+
+        let structurePromise = ramlServer.getNodeClientConnection().getStructure(this._editor.getPath());
+        if (structurePromise) {
+            structurePromise.then(structure=>{
+                var section=outline.createTree(structure,x=>{
+                    if (x.selection){
+                        if (x.selection.elements.length>0){
+                            nodeToSelect=x.selection.elements[0];
+                            ok.setDisabled(false)
+                            return;
+                        }
+
+                    }
+                    ok.setDisabled(true);
+                }, model=>{
+                    var editor = this._editor;
+                    var buffer = editor.getBuffer();
+
+                    // var posStart = buffer.positionForCharacterIndex(model.getSource().lowLevel().start());
+                    let position = buffer.positionForCharacterIndex(model.start)
+                    editor.setCursorScreenPosition(position);
+                    zz.destroy();
+                });
+                section.setStyle("max-height","800px");
+                section.addClass("tree-view-scroller");
+                vc.addChild(section);
+                var cancel=UI.buttonSimple("Cancel",x=>{zz.destroy()},UI.Icon.NONE);
+                cancel.setStyle("float", "right")
+                    .margin(4,10)
+                var ok=UI.button("Ok",UI.ButtonSizes.NORMAL,UI.ButtonHighlights.PRIMARY,UI.Icon.NONE,x=>{
+                    // if (nodeToSelect) {
+                    //     editorTools.aquireManager().setSelectedNode(nodeToSelect);
+                    // }
+                    zz.destroy();
+                });
+                ok.setStyle("float", "right")
+                    .margin(4,10)
+                ok.setDisabled(true)
+                vc.addChild(ok);
+                vc.addChild(cancel);
+
+                var html=vc.renderUI();
+                html.tabIndex=0;
+                html.onkeypress=x=>{
+                    if (x.keyCode==27) {
+                        zz.destroy();
+                    }
                 }
 
-            }
-            ok.setDisabled(true);
-        }, model=>{
-            var editor = this._editor;
-            var buffer = editor.getBuffer();
-            var posStart = buffer.positionForCharacterIndex(model.getSource().lowLevel().start());
-
-            editor.setCursorScreenPosition(posStart);
-            zz.destroy();
-        });
-        section.setStyle("max-height","800px");
-        section.addClass("tree-view-scroller");
-        vc.addChild(section);
-        var cancel=UI.buttonSimple("Cancel",x=>{zz.destroy()},UI.Icon.NONE);
-        cancel.setStyle("float", "right")
-            .margin(4,10)
-        var ok=UI.button("Ok",UI.ButtonSizes.NORMAL,UI.ButtonHighlights.PRIMARY,UI.Icon.NONE,x=>{
-            if (nodeToSelect) {
-                editorTools.aquireManager().setSelectedNode(nodeToSelect);
-            }
-            zz.destroy();
-        });
-        ok.setStyle("float", "right")
-            .margin(4,10)
-        ok.setDisabled(true)
-        vc.addChild(ok);
-        vc.addChild(cancel);
-
-        var html=vc.renderUI();
-        html.tabIndex=0;
-        html.onkeypress=x=>{
-            if (x.keyCode==27) {
-                zz.destroy();
-            }
+                zz=(<any>atom).workspace.addModalPanel( { item: html});
+                html.focus();
+            })
         }
-
-        zz=(<any>atom).workspace.addModalPanel( { item: html});
-        html.focus();
 
     }
 }

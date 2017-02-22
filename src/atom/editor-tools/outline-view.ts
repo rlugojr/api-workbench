@@ -34,7 +34,10 @@ export class RamlOutline extends SC.Scrollable {
             //     }
             // }
         });
-        this._viewers = [0, 1, 2, 3].map(i=> <UI.TreeViewer<any, any>> this._rs.get(i).content);
+        this._viewers = [];
+
+        if (structure)
+            this._viewers = [0, 1, 2, 3].map(i=> <UI.TreeViewer<any, any>> this._rs.get(i).content);
     }
 
     private _viewers: UI.TreeViewer<any,any>[];

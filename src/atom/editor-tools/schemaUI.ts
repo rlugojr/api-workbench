@@ -5,17 +5,17 @@ import khttp=require ("know-your-http-well");
 import path=require('path')
 import Disposable = UI.IDisposable
 import CompositeDisposable = UI.CompositeDisposable
-import rp=require("raml-1-parser")
+// import rp=require("raml-1-parser")
 import fs=require("fs")
 import Opt=require("../../Opt")
 import assistUtils = require("../dialogs/assist-utils");
-import details2=require("../editor-tools/details2")
+// import details2=require("../editor-tools/details2")
 import contextActions = require("raml-actions")
-import commonContextActions = require("../context-menu/commonContextActions")
-import details=require("../editor-tools/details")
+// import commonContextActions = require("../context-menu/commonContextActions")
+// import details=require("../editor-tools/details")
 import _=require("underscore")
 import pair = require("../../util/pair");
-import schemautil=rp.schema;
+// import schemautil=rp.schema;
 export class SchemaRenderer implements UI.ICellRenderer<any> {
     render(elem: any) : UI.BasicComponent<any> {
         var icon : UI.Icon;
@@ -81,15 +81,22 @@ export function getSchemaTree(name: string, contents: any): any {
 }
 export function _updatePreview(treeView: UI.TreeViewer<any, any>, value: string) {
     try {
-        var schema = schemautil.createSchema(value, null);
-        if (schema == null || schema.getType == null) {
+        // var schema = schemautil.createSchema(value, null);
+        // if (schema == null || schema.getType == null) {
+        //     treeView.setInput({},true);
+        //     return;
+        // }
+        // var schemaType = schema.getType();
+        if (!value) {
             treeView.setInput({},true);
             return;
         }
-        var schemaType = schema.getType();
 
-        var schemaModel = schemaType == "source.json" ? JSON.parse(value) : rootElements(value);
-        var schemaTree = schemaType == "source.json" ?  getSchemaTree("schema", schemaModel) : getXMLSchemaTree(schemaModel);
+        let firstCharacter = value.trim().charAt(0);
+        let isJSON = (firstCharacter == "{" || firstCharacter == "[");
+
+        var schemaModel = isJSON ? JSON.parse(value) : rootElements(value);
+        var schemaTree = isJSON ?  getSchemaTree("schema", schemaModel) : getXMLSchemaTree(schemaModel);
 
         treeView.setInput(schemaTree, true);
     } catch(e) {

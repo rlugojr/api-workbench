@@ -669,17 +669,17 @@ var getKeyValue = function (offset, txt) {
     }
     return res;
 };
-export function select(){
-    var ed=getActiveEditor();
-    var request={editor:ed,bufferPosition:ed.getCursorBufferPosition()};
-    var node=provider.getAstNode(request,false);
-    if (!node){
-        return;
-    }
-    var start=ed.getBuffer().positionForCharacterIndex(node.lowLevel().start());
-    var end=ed.getBuffer().positionForCharacterIndex(node.lowLevel().end());
-    ed.setSelectedBufferRange({start:start,end:end},{});
-}
+// export function select(){
+//     var ed=getActiveEditor();
+//     var request={editor:ed,bufferPosition:ed.getCursorBufferPosition()};
+//     var node=provider.getAstNode(request,false);
+//     if (!node){
+//         return;
+//     }
+//     var start=ed.getBuffer().positionForCharacterIndex(node.lowLevel().start());
+//     var end=ed.getBuffer().positionForCharacterIndex(node.lowLevel().end());
+//     ed.setSelectedBufferRange({start:start,end:end},{});
+// }
 //export function expandSignature(attr:hl.IAttribute){
 //    var tr=signature.convertToTrait(signature.parse(attr));
 //    //console.log('trait:\n' + tr.highLevel().lowLevel().dump());

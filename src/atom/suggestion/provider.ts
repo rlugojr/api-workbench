@@ -1,15 +1,15 @@
 import fs = require ('fs')
 import path = require ('path')
-import rp=require("raml-1-parser")
-import highlevel=rp.hl;
-import def=rp.ds;
-import search=rp.search;
-import lowLevel=rp.ll;
+// import rp=require("raml-1-parser")
+// import highlevel=rp.hl;
+// import def=rp.ds;
+// import search=rp.search;
+// import lowLevel=rp.ll;
 
 import _ = require('underscore');
 
 import suggestions = require('raml-suggestions');
-import sharedAstInitializerInterfaces = require('../shared-ast-initializer-interfaces');
+// import sharedAstInitializerInterfaces = require('../shared-ast-initializer-interfaces');
 
 export var selector= '.source.raml'
 export var disableForSelector= '.text.html .comment'
@@ -25,9 +25,9 @@ export interface AtomCompletionRequest {
 
 import editorTools=require("../editor-tools/editor-tools")
 
-export function initialize(astProvider : sharedAstInitializerInterfaces.IASTProvider) {
-    suggestions.setDefaultASTProvider(<any>astProvider);
-}
+// export function initialize(astProvider : sharedAstInitializerInterfaces.IASTProvider) {
+//     suggestions.setDefaultASTProvider(<any>astProvider);
+// }
 
 export function onDidInsertSuggestion(event:{editor:AtomCore.IEditor; triggerPosition:any; suggestion: any}){
     var offset=event.editor.getBuffer().characterIndexForPosition(event.triggerPosition);
@@ -169,81 +169,81 @@ export function getSuggestions(request: AtomCompletionRequest): suggestions.Sugg
     }
 }
 
-export function getAstNode(request: AtomCompletionRequest,clearLastChar:boolean=true,allowNull:boolean=true):highlevel.IParseResult{
-    var p=request.editor.getPath();
-    var prj=rp.project.createProject(path.dirname(p));
-    var offset=request.editor.getBuffer().characterIndexForPosition(request.bufferPosition);
-    var text=request.editor.getBuffer().getText();
-    var kind=search.determineCompletionKind(text,offset);
-    if(kind==search.LocationKind.KEY_COMPLETION&&clearLastChar){
-        var pos=offset>0?offset-1:offset;
-        for (var i=pos;i>0;i--){
-            var c=text[i];
-            if (c=='\r'||c=='\n'){
-                break;
-            }
-            else{
-                if (c==' '||c=='\t'){
-                    ilevel++;
-                }
-            }
-        }
-        var oldOfffset=offset;
-
-        text=text.substring(0,oldOfffset)+"k:"+text.substring(oldOfffset);
-        //offset--;
-    }
-    var ilevel=0;
-    var unit=prj.setCachedUnitContent(path.basename(p),text);
-    var ast=<highlevel.IHighLevelNode>unit.highLevel();
-    var cm=offset;
-    for (var pm=offset-1;pm>=0;pm--){
-        var c=text[pm];
-        //if (c==' '||c=='\t'||c=='\r'||c=='\n'){
-        //    cm=pm-1;
-        //    continue;
-        //}
-        if (c==' '||c=='\t'){
-            cm=pm-1;
-            continue;
-        }
-        break;
-    }
-    var astNode=ast.findElementAtOffset(cm);
-
-    if (astNode&&astNode.parent()==null){
-        if (ilevel>0&&kind==search.LocationKind.KEY_COMPLETION) {
-            var attr=_.find(astNode.attrs(),attr=>{
-                var at=<any>attr;
-                return at.lowLevel().start()<offset&&at.lowLevel().end()>=offset&&!at.property().isKey()
-            });
-            if (!attr) {
-                if (allowNull) {
-                    return null;
-                }
-            }
-        }
-        //check if we are on correct indentation level
-    }
-    if (!allowNull&&!astNode){
-        return ast;
-    }
-    return astNode;
-}
-
-export function saveUnit(unit : lowLevel.ICompilationUnit) : void {
-    var unitPath = unit.absolutePath()
-    var unitText = unit.contents()
-
-    //first trying to find an opened text editor
-    var openedEditor = _.find(atom.workspace.getTextEditors(), editor => {
-        var editorPath = editor.getPath()
-        return editorPath == unitPath
-    })
-
-    if (openedEditor) {
-        openedEditor.setText(unitText)
-    } else {
-        fs.writeFileSync(unitPath, unitText)
-    }
-}
+// export function getAstNode(request: AtomCompletionRequest,clearLastChar:boolean=true,allowNull:boolean=true):highlevel.IParseResult{
+//     var p=request.editor.getPath();
+//     var prj=rp.project.createProject(path.dirname(p));
+//     var offset=request.editor.getBuffer().characterIndexForPosition(request.bufferPosition);
+//     var text=request.editor.getBuffer().getText();
+//     var kind=search.determineCompletionKind(text,offset);
+//     if(kind==search.LocationKind.KEY_COMPLETION&&clearLastChar){
+//         var pos=offset>0?offset-1:offset;
+//         for (var i=pos;i>0;i--){
+//             var c=text[i];
+//             if (c=='\r'||c=='\n'){
+//                 break;
+//             }
+//             else{
+//                 if (c==' '||c=='\t'){
+//                     ilevel++;
+//                 }
+//             }
+//         }
+//         var oldOfffset=offset;
+//
+//         text=text.substring(0,oldOfffset)+"k:"+text.substring(oldOfffset);
+//         //offset--;
+//     }
+//     var ilevel=0;
+//     var unit=prj.setCachedUnitContent(path.basename(p),text);
+//     var ast=<highlevel.IHighLevelNode>unit.highLevel();
+//     var cm=offset;
+//     for (var pm=offset-1;pm>=0;pm--){
+//         var c=text[pm];
+//         //if (c==' '||c=='\t'||c=='\r'||c=='\n'){
+//         //    cm=pm-1;
+//         //    continue;
+//         //}
+//         if (c==' '||c=='\t'){
+//             cm=pm-1;
+//             continue;
+//         }
+//         break;
+//     }
+//     var astNode=ast.findElementAtOffset(cm);
+//
+//     if (astNode&&astNode.parent()==null){
+//         if (ilevel>0&&kind==search.LocationKind.KEY_COMPLETION) {
+//             var attr=_.find(astNode.attrs(),attr=>{
+//                 var at=<any>attr;
+//                 return at.lowLevel().start()<offset&&at.lowLevel().end()>=offset&&!at.property().isKey()
+//             });
+//             if (!attr) {
+//                 if (allowNull) {
+//                     return null;
+//                 }
+//             }
+//         }
+//         //check if we are on correct indentation level
+//     }
+//     if (!allowNull&&!astNode){
+//         return ast;
+//     }
+//     return astNode;
+// }
+//
+// export function saveUnit(unit : lowLevel.ICompilationUnit) : void {
+//     var unitPath = unit.absolutePath()
+//     var unitText = unit.contents()
+//
+//     //first trying to find an opened text editor
+//     var openedEditor = _.find(atom.workspace.getTextEditors(), editor => {
+//         var editorPath = editor.getPath()
+//         return editorPath == unitPath
+//     })
+//
+//     if (openedEditor) {
+//         openedEditor.setText(unitText)
+//     } else {
+//         fs.writeFileSync(unitPath, unitText)
+//     }
+// }
