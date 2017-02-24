@@ -25,7 +25,7 @@ import SpacePenViews = require('atom-space-pen-views')
 
 // import move=require("./moveElementsDialog")
 import tooltip=require("../core/tooltip-manager")
-import yaml = require("yaml-ast-parser")
+// import yaml = require("yaml-ast-parser")
 import linterUI = require("../core/linter-ui")
 
 import editorTools = require("../editor-tools/editor-tools")

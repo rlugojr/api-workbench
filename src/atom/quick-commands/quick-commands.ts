@@ -1,7 +1,7 @@
 /// <reference path="../../../typings/main.d.ts" />
 import qcui = require('./quick-commands-ui');
 import atom = require('../core/atomWrapper');
-import contextActions = require("raml-actions")
+// import contextActions = require("raml-actions")
 import cc = require('./code-commands');
 import et = require('../editor-tools/editor-tools');
 
@@ -81,16 +81,16 @@ export class CommandManager {
 
 	getDynamicCommands() : QuickCommand[] {
 		var result : QuickCommand[] = []
-		var currentActions = contextActions.calculateCurrentActions(contextActions.TARGET_RAML_EDITOR_NODE)
-
-		currentActions.forEach(action => {
-			var convertedQuickCommand : QuickCommand = new QuickCommand(action.name,
-				action.label?action.label:action.name, action.onClick, 1, ()=>{return true})
-
-			var cmd : any = convertedQuickCommand
-			cmd['__module__'] = 'editorTools'
-			result.push(convertedQuickCommand)
-		})
+		// var currentActions = contextActions.calculateCurrentActions(contextActions.TARGET_RAML_EDITOR_NODE)
+        //
+		// currentActions.forEach(action => {
+		// 	var convertedQuickCommand : QuickCommand = new QuickCommand(action.name,
+		// 		action.label?action.label:action.name, action.onClick, 1, ()=>{return true})
+        //
+		// 	var cmd : any = convertedQuickCommand
+		// 	cmd['__module__'] = 'editorTools'
+		// 	result.push(convertedQuickCommand)
+		// })
 
 		return result
 	}

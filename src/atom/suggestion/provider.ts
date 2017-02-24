@@ -8,7 +8,8 @@ import path = require ('path')
 
 import _ = require('underscore');
 
-import suggestions = require('raml-suggestions');
+// import suggestions = require('raml-suggestions');
+import ramlServer = require("raml-language-server");
 // import sharedAstInitializerInterfaces = require('../shared-ast-initializer-interfaces');
 
 export var selector= '.source.raml'
@@ -71,102 +72,95 @@ export function onDidInsertSuggestion(event:{editor:AtomCore.IEditor; triggerPos
 }
 
 
-class FSProvider implements suggestions.IFSProvider {
-    contentDirName(content: suggestions.IEditorStateProvider): string {
-        var contentPath = content.getPath();
+// class FSProvider implements suggestions.IFSProvider {
+//     contentDirName(content: suggestions.IEditorStateProvider): string {
+//         var contentPath = content.getPath();
+//
+//         return path.dirname(contentPath);
+//     }
+//
+//     dirName(childPath: string): string {
+//         return path.dirname(childPath);
+//     }
+//
+//     exists(checkPath: string): boolean {
+//         return fs.existsSync(checkPath);
+//     }
+//
+//     resolve(contextPath: string, relativePath: string): string {
+//         return path.resolve(contextPath, relativePath);
+//     }
+//
+//     isDirectory(dirPath: string): boolean {
+//         var stat = fs.statSync(dirPath);
+//
+//         return stat && stat.isDirectory();
+//     }
+//
+//     readDir(dirPath: string): string[] {
+//         return fs.readdirSync(dirPath);
+//     }
+//
+//     existsAsync(path: string): Promise<boolean> {
+//         return new Promise(resolve => {
+//             fs.exists(path, (result) => {resolve(result)})
+//         });
+//     }
+//
+//     /**
+//      * Returns directory content list.
+//      * @param fullPath
+//      */
+//     readDirAsync(path: string): Promise<string[]> {
+//         return new Promise(resolve => {
+//             fs.readdir(path, (err, result) => {resolve(result)})
+//         });
+//     }
+//
+//     /**
+//      * Check whether the path points to a directory.
+//      * @param fullPath
+//      */
+//     isDirectoryAsync(path: string): Promise<boolean> {
+//         return new Promise(resolve => {
+//             fs.stat(path, (err, stats) => {resolve(stats.isDirectory())})
+//         });
+//     }
+// }
 
-        return path.dirname(contentPath);
-    }
+// class AtomEditorState implements suggestions.IEditorStateProvider {
+//     textEditor: AtomCore.IEditor;
+//
+//     constructor(textEditor: AtomCore.IEditor,private request: AtomCompletionRequest) {
+//         this.textEditor = textEditor;
+//     }
+//
+//     getText(): string {
+//         return this.textEditor.getBuffer().getText();
+//     }
+//
+//     getPath(): string {
+//         return this.textEditor.getPath();
+//     }
+//
+//     getBaseName(): string {
+//         return path.basename(this.getPath());
+//     }
+//
+//     getOffset(): number {
+//         return this.request.editor.getBuffer().characterIndexForPosition(this.request.bufferPosition);
+//     }
+// }
 
-    dirName(childPath: string): string {
-        return path.dirname(childPath);
-    }
+export function getSuggestions(request: AtomCompletionRequest) {
 
-    exists(checkPath: string): boolean {
-        return fs.existsSync(checkPath);
-    }
+    // var editorState = new AtomEditorState(request.editor, request);
 
-    resolve(contextPath: string, relativePath: string): string {
-        return path.resolve(contextPath, relativePath);
-    }
+    let editor = request.editor;
+    let offset = editor.getBuffer().characterIndexForPosition(request.bufferPosition);
 
-    isDirectory(dirPath: string): boolean {
-        var stat = fs.statSync(dirPath);
-
-        return stat && stat.isDirectory();
-    }
-
-    readDir(dirPath: string): string[] {
-        return fs.readdirSync(dirPath);
-    }
-
-    existsAsync(path: string): Promise<boolean> {
-        return new Promise(resolve => {
-            fs.exists(path, (result) => {resolve(result)})
-        });
-    }
-
-    /**
-     * Returns directory content list.
-     * @param fullPath
-     */
-    readDirAsync(path: string): Promise<string[]> {
-        return new Promise(resolve => {
-            fs.readdir(path, (err, result) => {resolve(result)})
-        });
-    }
-
-    /**
-     * Check whether the path points to a directory.
-     * @param fullPath
-     */
-    isDirectoryAsync(path: string): Promise<boolean> {
-        return new Promise(resolve => {
-            fs.stat(path, (err, stats) => {resolve(stats.isDirectory())})
-        });
-    }
-}
-
-class AtomEditorState implements suggestions.IEditorStateProvider {
-    textEditor: AtomCore.IEditor;
-
-    constructor(textEditor: AtomCore.IEditor,private request: AtomCompletionRequest) {
-        this.textEditor = textEditor;
-    }
-
-    getText(): string {
-        return this.textEditor.getBuffer().getText();
-    }
-
-    getPath(): string {
-        return this.textEditor.getPath();
-    }
-
-    getBaseName(): string {
-        return path.basename(this.getPath());
-    }
-
-    getOffset(): number {
-        return this.request.editor.getBuffer().characterIndexForPosition(this.request.bufferPosition);
-    }
-}
-
-export function getSuggestions(request: AtomCompletionRequest): suggestions.Suggestion[] {
-    var t0=new Date().getMilliseconds();
-    try {
-        var editorState = new AtomEditorState(request.editor, request);
-
-        return suggestions.suggest(editorState, new FSProvider());
-
-    }finally{
-        if (editorTools.aquireManager()){
-            var m=editorTools.aquireManager();
-            if (m.performanceDebug){
-                var t1=new Date().getMilliseconds();
-                console.log("Completion calc:"+(t1-t0));
-            }
-        }
-    }
+    return ramlServer.getNodeClientConnection().getSuggestions(request.editor.getPath(), offset);
+    // return suggestions.suggest(editorState, new FSProvider());
 }
 
 // export function getAstNode(request: AtomCompletionRequest,clearLastChar:boolean=true,allowNull:boolean=true):highlevel.IParseResult{
